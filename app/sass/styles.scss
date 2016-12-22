@@ -1,0 +1,19 @@
+@import "vendor/vendor";
+
+@import "overrides/test";
+
+body {
+  background-color: #7f8c8d;
+}
+
+.line {
+  fill: #ecf0f1;
+  stroke: #3498db;
+}
+
+.flex-container {
+  display: flex;
+  justify-content: center;
+  // align-items: center;
+  height: 900px;
+}

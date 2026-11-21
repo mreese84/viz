@@ -89,7 +89,7 @@ const TOKENS = [
   ["disc","Center disc"],["discText","Disc title"],["discMuted","Disc subtitle"],
   ["profile","Elevation fill"],["profileLine","Elevation edge"],["accent","Summits & start"],
   ["band","Ride band"],["bandAlt","Ride band (alternate)"],["bandText","Ride band text"],
-  ["r1","Region: Abruzzo"],["r2","Region: Dolomiti"],["r3","Region: Toscana"],["regionText","Region text"],
+  ["r1","Region: Abruzzo"],["r2","Region: Trentino-Alto Adige"],["r3","Region: Toscana"],["regionText","Region text"],
   ["text","Main text"],["muted","Secondary text"],["grid","Elevation rings"],["tick","Mile ticks"]
 ];
 const THEMES = {
@@ -170,8 +170,9 @@ function render() {
   const root = zoomG.append("g");
   const mono = "Barlow Condensed, Arial Narrow, sans-serif";
 
-  // faint backing ring for the profile zone
-  root.append("path").attr("transform",`translate(${CX},${CY})`).attr("d", annulus(0, 2*Math.PI, R.base, R.bandIn-4)).attr("fill", T.text).attr("opacity", 0.035);
+  // per-ride backing wedges in the profile zone, alternating shade so neighbouring rides read apart
+  RIDES.forEach((r,i) => root.append("path").attr("transform",`translate(${CX},${CY})`)
+    .attr("d", annulus(ang(r.start), ang(r.end), R.base, R.bandIn-4)).attr("fill", T.text).attr("opacity", i%2 ? 0.08 : 0.03));
 
   // elevation rings (dashed); labels sit in a group raised above the profile
   const ringLabels = root.append("g");
@@ -234,7 +235,8 @@ function render() {
   root.append("text").attr("x",CX).attr("y",CY+108).attr("text-anchor","middle").attr("font-family","Barlow, sans-serif").attr("font-size",10.5)
     .attr("letter-spacing",".06em").attr("fill",T.discMuted).attr("opacity",.85).text("— whoever goes slowly goes safely, and goes far —");
 
-  // ride band
+  // ride band; a title that doesn't fit even at a smaller size moves to an outer label beyond the distance ticks
+  const outer = [];
   RIDES.forEach((r,i) => {
     const a0 = ang(r.start), a1 = ang(r.end);
     root.append("path").attr("transform",`translate(${CX},${CY})`).attr("d", annulus(a0+0.0025, a1-0.0025, R.bandIn, R.bandOut)).attr("fill", i%2 ? T.bandAlt : T.band);
@@ -244,13 +246,33 @@ function render() {
     const t = root.append("text").attr("font-family",mono).attr("font-size",12).attr("font-weight",500).attr("fill",T.bandText).attr("letter-spacing",".02em");
     const tp = t.append("textPath").attr("href","#"+id).attr("startOffset","50%").attr("text-anchor","middle");
     const fits = () => t.node().getComputedTextLength() <= avail;
-    let ok = false;
-    for (const o of [`${r.idx}  ·  ${r.name}  ·  ${dIt(r.date)}`, `${r.idx} · ${r.name}`]) { tp.text(o); if (fits()) { ok = true; break; } }
-    if (!ok) {
-      let nm = r.name;
-      while (nm.length > 4) { nm = nm.slice(0,-1).trimEnd(); tp.text(`${r.idx} · ${nm}…`); if (fits()) { ok = true; break; } }
-      if (!ok) tp.text(`${r.idx}`);
+    const full = `${r.idx}  ·  ${r.name}  ·  ${dIt(r.date)}`, short = `${r.idx} · ${r.name}`;
+    const tries = [[12, full], [12, short], [11, short], [10, short]];
+    if (!tries.some(([fs, s]) => { t.attr("font-size", fs); tp.text(s); return fits(); })) {
+      t.attr("font-size", 12); tp.text(`${r.idx}`);
+      outer.push({ r, a0, a1 });
     }
+  });
+
+  // outer labels: a bracket over the ride's span and its full title just outside it.
+  // Two overflowing neighbours sit side by side, meeting at their shared boundary.
+  const RB = R.tickLab + 22, RO = RB + 6;   // clear of the distance labels
+  outer.forEach((o, k) => {
+    const t = root.append("text").attr("font-family",mono).attr("font-size",11.5).attr("font-weight",500)
+      .attr("fill",T.text).attr("letter-spacing",".02em").text(`${o.r.idx} · ${o.r.name}`);
+    const w = (t.node().getComputedTextLength() + 2) / RO, gap = 3 / RO, mid = (o.a0+o.a1)/2;
+    const prev = outer[k-1], next = outer[k+1];
+    let [l0, l1] = prev && prev.r.idx === o.r.idx-1 ? [o.a0+gap, o.a0+gap+w]
+                 : next && next.r.idx === o.r.idx+1 ? [o.a1-gap-w, o.a1-gap]
+                 : [mid-w/2, mid+w/2];
+    if (prev && l0 < prev.l1 + 2*gap) { l0 = prev.l1 + 2*gap; l1 = l0 + w; }   // never overlap the previous outer label
+    Object.assign(o, { l0, l1 });
+    const bottom = Math.cos((l0+l1)/2) < -0.05, id = "outer"+k;
+    defs.append("path").attr("id", id).attr("d", arcPath(l0, l1, RO + (bottom ? 9 : 0)));
+    t.text(null).append("textPath").attr("href","#"+id).attr("startOffset","50%").attr("text-anchor","middle").text(`${o.r.idx} · ${o.r.name}`);
+    const b0 = o.a0 + 0.004, b1 = o.a1 - 0.004, [p0,q0] = pt(b0, RB-4), [p1,q1] = pt(b1, RB-4);
+    root.append("path").attr("d", `M${p0},${q0} L${arcPath(b0, b1, RB, false).slice(1)} L${p1},${q1}`)  // end tick, arc, end tick
+      .attr("fill","none").attr("stroke",T.text).attr("stroke-opacity",.6).attr("stroke-width",1).attr("vector-effect","non-scaling-stroke");
   });
 
   // distance ticks
@@ -317,7 +339,7 @@ function render() {
   });
 
   // ---------- Lower block ----------
-  const yb = 1238, text = (x,y,s,opt={}) => {
+  const yb = 1230, text = (x,y,s,opt={}) => {
     const t = root.append("text").attr("x",x).attr("y",y).attr("text-anchor",opt.anchor||"middle")
       .attr("font-family",opt.font||mono).attr("font-size",opt.size||14).attr("fill",opt.fill||T.text);
     if (opt.ls) t.attr("letter-spacing",opt.ls); if (opt.weight) t.attr("font-weight",opt.weight); if (opt.italic) t.attr("font-style","italic");
@@ -333,18 +355,18 @@ function render() {
   const hw = head.node().getComputedTextLength();
   [yb+70, yb+101].forEach(y => root.append("line").attr("x1",CX-hw/2-8).attr("x2",CX+hw/2+8).attr("y1",y).attr("y2",y).attr("stroke",T.text).attr("stroke-width",1.4));
 
-  // ride list (3 columns × 4 rows)
-  const colW = 352, x0 = CX - colW*1.5, y0 = yb + 140;
+  // ride list (3 columns × 4 rows): full name, stats on a second line
+  const colW = 352, rowH = 38, x0 = CX - colW*1.5, y0 = yb + 134;
   RIDES.forEach((r,i) => {
-    const c = Math.floor(i/4), row = i%4, x = x0 + c*colW + 10, y = y0 + row*25;
-    const nm = r.name.length > 26 ? r.name.slice(0,25).trimEnd()+"…" : r.name;
+    const c = Math.floor(i/4), row = i%4, x = x0 + c*colW + 10, y = y0 + row*rowH, maxW = colW - 44;
     text(x, y, String(r.idx).padStart(2,"0"), {anchor:"start", size:13, fill:T.accent, weight:600});
-    text(x+24, y, nm, {anchor:"start", size:13.5});
-    text(x+colW-24, y, `${dIt(r.date)}  ·  ${fmt1(u.d(r.dist))} ${u.dl}  ·  ${fmt0(u.e(r.gain))} ${u.el}`, {anchor:"end", size:12, fill:T.muted});
+    const nt = text(x+24, y, r.name, {anchor:"start", size:13.5});
+    if (nt.node().getComputedTextLength() > maxW) nt.attr("textLength", maxW).attr("lengthAdjust","spacingAndGlyphs");
+    text(x+24, y+16, `${dIt(r.date)}  ·  ${fmt1(u.d(r.dist))} ${u.dl}  ·  ${fmt0(u.e(r.gain))} ${u.el}`, {anchor:"start", size:12, fill:T.muted});
   });
 
   // legend
-  const ly = y0 + 4*25 + 26;
+  const ly = y0 + 4*rowH + 22;
   root.append("line").attr("x1",120).attr("x2",W-120).attr("y1",ly-18).attr("y2",ly-18).attr("stroke",T.muted).attr("stroke-opacity",.5);
   root.append("line").attr("x1",120).attr("x2",W-120).attr("y1",ly+14).attr("y2",ly+14).attr("stroke",T.muted).attr("stroke-opacity",.5);
   const items = [
@@ -362,7 +384,7 @@ function render() {
     if (k==="region") [0,1,2].forEach(j => g.append("rect").attr("x",-6+j*7).attr("y",-6).attr("width",6).attr("height",10).attr("fill",T["r"+(j+1)]));
     g.append("text").attr("x",22).attr("y",3).attr("font-family",mono).attr("font-size",11.5).attr("letter-spacing",".08em").attr("fill",T.muted).text(lab);
   });
-  text(CX, H-34, "Elevation profiles from GPX  ·  climbs named from Strava segments", {size:11, ls:".12em", fill:T.muted});
+  text(CX, H-28, "Elevation profiles from GPX  ·  climbs named from Strava segments", {size:11, ls:".12em", fill:T.muted});
 
   // ---------- Hover layer ----------
   const hov = zoomG.append("g").style("pointer-events","none");
@@ -493,7 +515,11 @@ function sync() {
   const T = theme(); d3.selectAll("[data-token]").property("value", function(){ return T[this.dataset.token]; });
 }
 sync();
-(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(render);
+// Load the exact faces before the first render: label fitting measures text, and fonts.ready alone
+// can resolve before a weight that hasn't been used yet is fetched.
+const FACES = ["400 12px 'Barlow Condensed'", "500 12px 'Barlow Condensed'", "600 12px 'Barlow Condensed'",
+  "400 12px Barlow", "400 42px 'Bodoni Moda'", "italic 400 32px 'Bodoni Moda'"];
+(document.fonts ? Promise.all(FACES.map(f => document.fonts.load(f).catch(() => {}))) : Promise.resolve()).then(render);
 </script>
 </body>
 </html>

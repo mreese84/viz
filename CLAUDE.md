@@ -28,8 +28,12 @@ Open `dist/index.html` in a browser. It loads D3 7.9 from cdnjs and fonts from G
 - SVG viewBox 1200×1600, centre (600,600). Radii in the `R` object; angle 0 = top, clockwise, proportional to cumulative distance (`ang()`).
 - `THEMES` (6 presets) and `TOKENS` (20 colour slots). Users override per token; state persists in localStorage key `giro-marco-v1`.
 - `render()` rebuilds the whole SVG on any change (theme, units, relief). Colours are written as attributes, not CSS vars, so SVG/PNG export keeps them.
+- Fonts are loaded explicitly (`FACES`, `document.fonts.load`) before the first `render()`, because label fitting measures text; `document.fonts.ready` alone can resolve before an unused weight is fetched, which made titles measure too wide.
+- Each ride has a backing wedge in the profile zone, alternating between two opacities of the `text` colour so neighbouring rides read apart in every theme.
 - Region colours (r1–r3) were checked with a colour-vision validator (adjacent-pair ΔE ≥ 15 normal vision, ≥ 8 under CVD simulation). Keep them separated if you change them; region names are printed on the band as secondary encoding.
 - Zoom: d3.zoom on `.zoomable`, scale 1–10. Wheel zoom only with Ctrl/⌘ (trackpad pinch), one-finger touch scrolls the page until zoomed. Fine lines use `vector-effect: non-scaling-stroke`. Export strips the zoom transform.
+- Ride band titles: tried as `n · name · date` at 12px, then `n · name` at 12/11/10px. If none fit, the band shows just the number and the full title goes in an outer label (bracket over the ride's span, title just beyond the distance labels). Neighbouring overflowing rides sit side by side. Currently only ride 4 overflows.
+- Ride list below the poster: 3 columns × 4 rows, full name with stats on a second line; an over-long name is condensed (`textLength`), never cut.
 - Climb labels: radial text, simple 1-D collision relaxation (`minSep`), flipped on the left half.
 - Hover: annulus hit-area → ride, distance, elevation and grade (±150 m window).
 

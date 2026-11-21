@@ -221,19 +221,22 @@ function render() {
   root.append("circle").attr("cx",CX).attr("cy",CY).attr("r",R.disc).attr("fill",T.disc);
   root.append("circle").attr("cx",CX).attr("cy",CY).attr("r",R.disc-9).attr("fill","none").attr("stroke",T.discMuted).attr("stroke-opacity",.35).attr("stroke-width",.8);
   const flag = [["#009246",-1],["#f4f5f0",0],["#ce2b37",1]];
-  flag.forEach(([c,k]) => root.append("rect").attr("x",CX-27+(k+1)*18).attr("y",CY-108).attr("width",18).attr("height",4).attr("fill",c));
+  flag.forEach(([c,k]) => root.append("rect").attr("x",CX-27+(k+1)*18).attr("y",CY-130).attr("width",18).attr("height",4).attr("fill",c));
   const serif = "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, serif";
-  root.append("text").attr("x",CX).attr("y",CY-58).attr("text-anchor","middle").attr("font-family",mono).attr("font-size",13)
+  root.append("text").attr("x",CX).attr("y",CY-82).attr("text-anchor","middle").attr("font-family",mono).attr("font-size",13)
     .attr("letter-spacing",".42em").attr("fill",T.discMuted).text("GIUGNO · LUGLIO 2024");
-  root.append("text").attr("x",CX).attr("y",CY-6).attr("text-anchor","middle").attr("font-family",serif).attr("font-size",42).attr("font-weight",400)
+  root.append("text").attr("x",CX).attr("y",CY-30).attr("text-anchor","middle").attr("font-family",serif).attr("font-size",42).attr("font-weight",400)
     .attr("fill",T.discText).text("Il Giro d’Italia");
-  root.append("text").attr("x",CX).attr("y",CY+38).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",32)
+  root.append("text").attr("x",CX).attr("y",CY+12).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",32)
     .attr("fill",T.discText).text("di Marco");
-  root.append("line").attr("x1",CX-40).attr("x2",CX+40).attr("y1",CY+64).attr("y2",CY+64).attr("stroke",T.discMuted).attr("stroke-opacity",.6);
-  root.append("text").attr("x",CX).attr("y",CY+90).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",13.5)
-    .attr("fill",T.discMuted).text("«Chi va piano va sano e va lontano»");
-  root.append("text").attr("x",CX).attr("y",CY+108).attr("text-anchor","middle").attr("font-family","Barlow, sans-serif").attr("font-size",10.5)
-    .attr("letter-spacing",".06em").attr("fill",T.discMuted).attr("opacity",.85).text("— whoever goes slowly goes safely, and goes far —");
+  root.append("line").attr("x1",CX-40).attr("x2",CX+40).attr("y1",CY+36).attr("y2",CY+36).attr("stroke",T.discMuted).attr("stroke-opacity",.6);
+  // quote, hand-broken to fit the disc; the English gloss follows in smaller sans
+  ["«La bicicletta ha un’anima.", "Se riesci ad amarla, ti regalerà", "emozioni che non dimenticherai mai.»"].forEach((s,i) =>
+    root.append("text").attr("x",CX).attr("y",CY+62+i*17).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",13)
+      .attr("fill",T.discMuted).text(s));
+  ["— the bicycle has a soul. If you can love it,", "it will give you emotions you’ll never forget —"].forEach((s,i) =>
+    root.append("text").attr("x",CX).attr("y",CY+124+i*13).attr("text-anchor","middle").attr("font-family","Barlow, sans-serif").attr("font-size",9.5)
+      .attr("letter-spacing",".04em").attr("fill",T.discMuted).attr("opacity",.85).text(s));
 
   // ride band; a title that doesn't fit even at a smaller size moves to an outer label beyond the distance ticks
   const outer = [];

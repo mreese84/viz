@@ -27,4 +27,6 @@ python3 scripts/assemble.py
 
 Fetched Strava data (`data/strava/`), GPX exports (`gpx/`), `.env` and tokens stay out of the repo: the tracks hold full GPS coordinates. Rides that haven't been fetched fall back to GPX files in `gpx/<poster>/`.
 
+**Add poster from the browser:** the gallery's last card opens a page that turns a list of Strava links into a new poster, prompting for the title, regions, climb labels and colours, with a live preview, and publishes it to the gallery with one commit. One-time setup: deploy the small Strava login Worker (see [`workers/strava-auth/README.md`](workers/strava-auth/README.md)) and put its address in `src/site.json`.
+
 Themes, units (mi/ft or km/m), relief scale, zoom, and SVG/PNG export are built into every poster. See CLAUDE.md for how it works and how to add a poster.

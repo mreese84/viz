@@ -53,14 +53,18 @@
     .poster { order:1; border-radius:0; box-shadow:none; }
     .toolbar { order:2; margin:0; padding:14px 14px 0; gap:10px 14px; font-size:12.5px; }
     .note { order:3; margin:14px 14px 0; }
-    .group > span.lbl { min-width:46px; }
+    .group > span.lbl { min-width:42px; }
     button { padding:6px 10px; }
-    .swatch { margin-right:5px; }
-    .swatch i { width:7px; height:12px; }
+    /* the three theme chips stay on one row */
+    #themes { flex-wrap:nowrap; gap:5px; }
+    #themes button { padding:6px 7px; font-size:12px; white-space:nowrap; }
+    #themes .swatch { gap:1px; margin-right:4px; }
+    #themes .swatch i { width:6px; height:11px; }
     .zoombar { position:static; justify-content:center; background:none; backdrop-filter:none; padding:10px 0 2px; gap:8px; }
     .zoombar button { width:36px; height:36px; color:var(--ui-text); background:var(--ui-chip); border-color:var(--ui-line); }
     .zoombar span { color:var(--ui-muted); }
   }
+  @media (max-width:357px) { #themes .lbl { display:none; } }   /* narrowest phones: the swatches say what these are */
 </style>
 </head>
 <body>

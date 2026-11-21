@@ -43,7 +43,8 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 - Ride band titles: tried as `n · name · date` at 12px, then `n · name` at 12/11/10px. If none fit, the band shows just the number and the full title goes in an outer label (bracket over the ride's span, title just beyond the distance labels). Neighbouring overflowing rides sit side by side. Currently only ride 4 overflows.
 - Ride list below the poster: 3 columns × 4 rows, full name with stats on a second line; an over-long name is condensed (`textLength`), never cut.
 - Climb labels: radial text, simple 1-D collision relaxation (`minSep`), flipped on the left half.
-- Hover: annulus hit-area → ride, distance, elevation and grade (±150 m window).
+- Hover: annulus hit-area → ride, distance, elevation and grade (±150 m window). On touch screens a tap shows the readout and it stays until you tap elsewhere.
+- Phones (≤ 600px wide, CSS only): the poster comes first and runs edge to edge, the zoom buttons sit under it instead of over its top-right corner, and the controls follow below. The help note has a mouse and a touch wording (`.note.mouse` / `.note.touch`, switched on `hover:none`).
 
 ## Adding a ride
 

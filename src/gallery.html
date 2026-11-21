@@ -25,6 +25,10 @@
   h2 { font-family:'Bodoni Moda', Didot, Georgia, serif; font-weight:400; font-size:23px; margin:0 0 8px; }
   .when, .stats { font-family:'Barlow Condensed', 'Arial Narrow', sans-serif; text-transform:uppercase; letter-spacing:.08em; font-size:13px; color:var(--muted); margin:0 0 3px; }
   .summary { font-size:14px; line-height:1.5; color:var(--text); opacity:.85; margin:10px 0 0; }
+  .card.add { border-style:dashed; background:transparent; }
+  .card.add .plus { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-family:'Bodoni Moda', Georgia, serif;
+                    font-size:96px; font-weight:400; color:var(--muted); border-bottom:1px dashed var(--line); }
+  .card.add:hover .plus { color:var(--text); }
   @media (max-width:600px) { .wrap { padding:32px 16px 48px; } h1 { font-size:34px; } }
 </style>
 </head>
@@ -36,6 +40,13 @@
   </header>
   <main class="grid">
 <!--__CARDS__-->
+    <a class="card add" href="new/">
+      <div class="plus" aria-hidden="true">+</div>
+      <div class="meta">
+        <h2>Add poster</h2>
+        <p class="summary">Make a poster from a set of Strava rides. For the site owner.</p>
+      </div>
+    </a>
   </main>
 </div>
 </body>

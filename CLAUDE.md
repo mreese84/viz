@@ -13,6 +13,14 @@ python3 scripts/assemble.py     # src/template.html + src/rides_data.js -> dist/
 
 Open `dist/index.html` in a browser. It loads D3 7.9 from cdnjs and fonts from Google Fonts; everything else is inline. Python 3.9+ standard library only (zoneinfo needs tz data, present on macOS/Linux).
 
+## Deploy
+
+GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
+
+- Every pull request and push to `main` re-runs `assemble.py` and fails if the committed `dist/index.html` differs, so always rebuild and commit `dist/` together with `src/` changes.
+- A push to `main` (or a manual run on `main`) then publishes `dist/` as the site. Nothing else deploys.
+- Repo setting this relies on: Settings → Pages → Source = "GitHub Actions" (which also restricts the `github-pages` environment to `main`).
+
 ## Layout
 
 - `gpx/` — local only, git-ignored: Strava GPX exports, one per ride (Garmin Edge 820, 1-second points with time and elevation).
@@ -21,7 +29,7 @@ Open `dist/index.html` in a browser. It loads D3 7.9 from cdnjs and fonts from G
   - `CLIMBS`: per ride index, `(label, start_index, end_index)`. Indices are Strava segment-effort stream indices (= GPX trackpoint indices); the label sits at the highest point in that range. `end_index=None` means "to the end of the ride".
   - Ride 11 also gets a "Firenze" place label at its northernmost point.
 - `src/template.html` — the page. `/*__DATA__*/` is replaced by `const RIDES = [...]`.
-- `dist/index.html` — built output (published version).
+- `dist/index.html` — built output, committed; this is what GitHub Pages serves.
 
 ## Page internals (src/template.html)
 

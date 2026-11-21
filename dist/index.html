@@ -95,15 +95,13 @@ const TOKENS = [
 ];
 const THEMES = {
   "Maglia Rosa": {page:"#18171c",bgTop:"#34303b",bgBottom:"#1f1c24",disc:"#16141a",discText:"#fbe9ef",discMuted:"#b9a5ae",profile:"#f2a3bd",profileLine:"#ffe1ea",accent:"#ff7aa2",band:"#3f3946",bandAlt:"#4a4352",bandText:"#f3e6eb",r1:"#a68d2a",r2:"#4f8fca",r3:"#de6a3a",regionText:"#16141a",text:"#f6eef1",muted:"#a7979f",grid:"#f2a3bd",tick:"#f2a3bd"},
-  "Chianti": {page:"#1a070c",bgTop:"#6b1f33",bgBottom:"#320d17",disc:"#23080f",discText:"#f8ecdc",discMuted:"#cfa99c",profile:"#e8c068",profileLine:"#fff0bf",accent:"#f2cf7a",band:"#7a2a3d",bandAlt:"#873547",bandText:"#fbeee0",r1:"#a68d2a",r2:"#5a93cc",r3:"#e06e40",regionText:"#23080f",text:"#f8ede3",muted:"#cda8a2",grid:"#e8c068",tick:"#e8c068"},
-  "Terracotta": {page:"#4a1f14",bgTop:"#cf6e50",bgBottom:"#9a432d",disc:"#5e2617",discText:"#fff3e4",discMuted:"#f2c6ad",profile:"#f5e6c8",profileLine:"#fffaf0",accent:"#fff1c9",band:"#b65a3f",bandAlt:"#c36649",bandText:"#fff4e8",r1:"#a8902a",r2:"#3d74ad",r3:"#8a3a22",regionText:"#fff4e8",text:"#fff4e8",muted:"#f6cbb4",grid:"#fff1d6",tick:"#f5e6c8"},
   "Dolomiti": {page:"#0f1820",bgTop:"#34505f",bgBottom:"#1a2a35",disc:"#101c25",discText:"#eef5f8",discMuted:"#9fb4c0",profile:"#e9f1f4",profileLine:"#ffffff",accent:"#7fd6c9",band:"#3b5666",bandAlt:"#446172",bandText:"#eef5f8",r1:"#a68d2a",r2:"#5b97cf",r3:"#d86a3e",regionText:"#101c25",text:"#eef4f7",muted:"#9fb3bf",grid:"#bcd3dd",tick:"#d7e6ec"},
-  "Tricolore": {page:"#e6dccb",bgTop:"#f7f1e6",bgBottom:"#ece2cf",disc:"#1f4a35",discText:"#f7f1e6",discMuted:"#b9cdbf",profile:"#2f6b4b",profileLine:"#183d2a",accent:"#c8102e",band:"#e3d7c1",bandAlt:"#d9cbb1",bandText:"#2a2a24",r1:"#9a8420",r2:"#3f74ad",r3:"#c8432f",regionText:"#f7f1e6",text:"#23271f",muted:"#6f6a5c",grid:"#8a8270",tick:"#2f6b4b"},
-  "Cipresso": {page:"#1d2b25",bgTop:"#6a957d",bgBottom:"#2f4d42",disc:"#22352d",discText:"#e6efc8",discMuted:"#a9bf9c",profile:"#1f2e28",profileLine:"#d6e58c",accent:"#d6e58c",band:"#4b6f60",bandAlt:"#557a6a",bandText:"#e6efc8",r1:"#a68d2a",r2:"#4a86c0",r3:"#d0663a",regionText:"#1f2e28",text:"#e8f0d8",muted:"#b5c9b0",grid:"#d6e58c",tick:"#c9d79a"}
+  "Tricolore": {page:"#e6dccb",bgTop:"#f7f1e6",bgBottom:"#ece2cf",disc:"#1f4a35",discText:"#f7f1e6",discMuted:"#b9cdbf",profile:"#2f6b4b",profileLine:"#183d2a",accent:"#c8102e",band:"#e3d7c1",bandAlt:"#d9cbb1",bandText:"#2a2a24",r1:"#9a8420",r2:"#3f74ad",r3:"#c8432f",regionText:"#f7f1e6",text:"#23271f",muted:"#6f6a5c",grid:"#8a8270",tick:"#2f6b4b"}
 };
 const STORE = "giro-marco-v1";
 let state = { preset:"Maglia Rosa", overrides:{}, units:"imperial", relief:"sqrt" };
-try { const s = JSON.parse(localStorage.getItem(STORE)); if (s && THEMES[s.preset]) state = Object.assign(state, s); } catch(e) {}
+try { const s = JSON.parse(localStorage.getItem(STORE)); if (s) state = Object.assign(state, s); } catch(e) {}
+if (!THEMES[state.preset]) { state.preset = "Maglia Rosa"; state.overrides = {}; }   // saved theme no longer offered
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e) {} };
 const theme = () => Object.assign({}, THEMES[state.preset], state.overrides);
 

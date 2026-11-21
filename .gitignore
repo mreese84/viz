@@ -5,3 +5,4 @@ gpx/
 .env
 .strava_tokens.json
 data/strava/
+dist/

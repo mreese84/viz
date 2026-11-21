@@ -5,6 +5,8 @@
 - dist/<poster>/index.html for every src/posters/<poster>/ (template.html + config.json + rides_data.js)
 - dist/index.html, the gallery (gallery.html + a card per poster, newest trip first). Card thumbnails are
   radial elevation silhouettes drawn here from each poster's data, so they always match the posters.
+- dist/new/, the "Add poster" page: src/new/* plus site.json, the poster template, and presets.json (every
+  poster's colour themes, and the web addresses already taken).
 """
 import html, json, math, os, shutil
 
@@ -84,6 +86,15 @@ def main():
     cards = "\n".join(card(slug, cfg, rides) for slug, cfg, _, rides in posters)
     open(os.path.join(DIST, "index.html"), "w", encoding="utf-8").write(read(SRC, "gallery.html").replace("<!--__CARDS__-->", cards))
     print("wrote dist/index.html (gallery)")
+    shutil.copytree(os.path.join(SRC, "new"), os.path.join(DIST, "new"))
+    shutil.copy(os.path.join(SRC, "site.json"), os.path.join(DIST, "new", "site.json"))
+    shutil.copy(os.path.join(SRC, "template.html"), os.path.join(DIST, "new", "template.html"))
+    themes = {}
+    for _, cfg, _, _ in posters:
+        for name, t in cfg["themes"].items(): themes.setdefault(name, t)
+    presets = {"themes": themes, "slugs": sorted(slug for slug, *_ in posters)}
+    open(os.path.join(DIST, "new", "presets.json"), "w", encoding="utf-8").write(json.dumps(presets, ensure_ascii=False, indent=1))
+    print("wrote dist/new/ (Add poster page)")
 
 if __name__ == "__main__":
     main()

@@ -23,14 +23,14 @@ Per ride, `build_data.py` uses the fetched Strava streams when present and other
 
 `python3 scripts/build_data.py <poster> --compare-gpx` (needs both sources) checks each ride's stream length against its GPX point count, stops on any mismatch (climb indices wouldn't be comparable), and lists every total and summit that changes, flagging anything over 2%. It writes nothing.
 
-Open `dist/index.html` (gallery) or `dist/<poster>/index.html` in a browser. Posters load D3 7.9 from cdnjs and fonts from Google Fonts; everything else is inline. The gallery needs no JavaScript. Python 3.9+ standard library only (zoneinfo needs tz data, present on macOS/Linux).
+`dist/` is generated and git-ignored; run `assemble.py`, then open `dist/index.html` (gallery) or `dist/<poster>/index.html` in a browser. Posters load D3 7.9 from cdnjs and fonts from Google Fonts; everything else is inline. The gallery needs no JavaScript. Python 3.9+ standard library only (zoneinfo needs tz data, present on macOS/Linux).
 
 ## Deploy
 
 GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/ (gallery), posters at `/viz/<poster>/`.
 
-- Every pull request and push to `main` re-runs `assemble.py` and fails if anything under `dist/` differs from what's committed (changed, deleted or new files), so always rebuild and commit `dist/` together with `src/` changes.
-- A push to `main` (or a manual run on `main`) then publishes `dist/` as the site. Nothing else deploys.
+- `dist/` is not committed. Every pull request and push to `main` runs the tests (`tests/test_suggestions.py`, `tests/parity/check.py`, which needs Node) and builds `dist/` with `assemble.py` (a broken config or data file fails the build).
+- A push to `main` (or a manual run on `main`) then publishes the built `dist/` as the site. Nothing else deploys. Commits from the gallery's "Add poster" page are pushes to `main`, so they deploy the same way.
 - Repo setting this relies on: Settings → Pages → Source = "GitHub Actions" (which also restricts the `github-pages` environment to `main`).
 
 ## Layout
@@ -41,15 +41,19 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 - `src/posters/<poster>/rides.json` — the data inputs: rides, climbs, places (see below).
 - `src/posters/<poster>/rides_data.js` — built ride data (`const RIDES = [...]`).
 - `src/template.html` — the poster page, shared by all posters. `__TITLE__` and `/*__DATA__*/` are filled in by `assemble.py` (`const RIDES = …; const POSTER = <config.json>;`).
-- `src/gallery.html` — the gallery page; `<!--__CARDS__-->` becomes one card per poster, newest trip first.
+- `src/gallery.html` — the gallery page; `<!--__CARDS__-->` becomes one card per poster, newest trip first, followed by the static "Add poster" card.
+- `src/new/` — the "Add poster" page (`index.html`, `app.js`) and `ridemath.js`, the browser copy of the ride maths (see below).
+- `src/site.json` — settings for the Add poster page: `repo`, `branch`, `siteUrl`, `stravaWorker` (the Worker's address; empty = the page shows a setup notice). `githubApi` exists only for testing against a fake.
+- `workers/strava-auth/` — the Cloudflare Worker for Strava login from the browser; its README has the deploy steps.
+- `tests/` — `test_suggestions.py` (climb-suggestion rules) and `parity/check.py` (browser vs Python ride maths on synthetic rides).
 - `scripts/strava_client.py` — `.env`, token storage and refresh, rate-limited GET (prints usage from `X-RateLimit-*`/`X-ReadRateLimit-*`, waits for the next 15-minute window on 429, stops if the daily limit is used up). Never prints secrets or tokens. `STRAVA_API_BASE`/`STRAVA_OAUTH_BASE` exist only for testing against a local fake.
 - `scripts/strava_auth.py` — one-time OAuth: opens Strava's consent page (scope `read,activity:read_all`), catches the redirect on `http://localhost:8721/callback` (`--port` to change; the Strava app's callback domain must be `localhost`).
 - `scripts/fetch_strava.py` — `GET /activities/{id}?include_all_efforts=true` and `/activities/{id}/streams?keys=time,distance,latlng,altitude,moving&key_by_type=true` per ride.
 - `scripts/strava_data.py` — reading fetched data, segment-name matching, climb suggestions (shared by build and suggest).
 - `scripts/suggest_climbs.py` — uphill efforts (grade ≥ 2%, ≥ 20 m gain) ranked by climb category then gain; pieces of one climb merged (overlapping efforts where one lies inside the other, or whose tops are within 500 m along the ride); top 5 printed as rides.json entries (`--all` for every one).
 - `scripts/build_data.py` — builds `rides_data.js` from Strava streams or GPX (see Build), placing summit and place labels.
-- `scripts/assemble.py` — writes `dist/` from scratch (it deletes the old one): `dist/<poster>/index.html` per poster and `dist/index.html`. Gallery thumbnails are radial silhouettes drawn in Python from each poster's data, in its default theme and relief, so they never go stale.
-- `dist/` — built output, committed; this is what GitHub Pages serves.
+- `scripts/assemble.py` — writes `dist/` from scratch (it deletes the old one): `dist/<poster>/index.html` per poster, `dist/index.html`, and `dist/new/` (the Add poster page plus `site.json`, the raw poster template and `presets.json`: every poster's themes and the addresses already taken). Gallery thumbnails are radial silhouettes drawn in Python from each poster's data, in its default theme and relief, so they never go stale.
+- `dist/` — built output, git-ignored; CI builds it and GitHub Pages serves it.
 
 ## Poster config (src/posters/<poster>/config.json)
 
@@ -87,13 +91,25 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 - Hover: annulus hit-area → ride, distance, elevation and grade (±150 m window). On touch screens a tap shows the readout and it stays until you tap elsewhere.
 - Phones (≤ 600px wide, CSS only): the poster comes first and runs edge to edge, the zoom buttons sit under it instead of over its top-right corner, and the controls follow below (theme chips on one row; the "Theme" label drops below 358px). The help note has a mouse and a touch wording (`.note.mouse` / `.note.touch`, switched on `hover:none`).
 
+## Add poster page (src/new/, served at /new/)
+
+For the site owner. Flow: Strava links → Strava login (through the Worker) → fetch activity + streams per ride, sorted by start time → prompts: poster text (pre-filled from the dates in the chosen language), region (required) and town per ride, climb labels (ranked suggestions, top 3 ticked, editable; optional label at the ride's highest point = range `[0, null]`), themes (from `presets.json`), flag stripes, elevation scale (base 0 + Enhanced if the low point is under 400 m, otherwise just under it + True scale) → preview (the real template in an iframe) → publish.
+
+- Publishing makes one commit to `main` via the GitHub git-data API (ref → commit → tree → commit → ref update, retried once if `main` moved) adding `src/posters/<slug>/config.json`, `rides.json` and `rides_data.js`. CI then builds and deploys. It refuses an address that already exists. If `main` is ever protected by a pull-request rule, this direct commit will be refused.
+- Tokens stay in the browser: Strava tokens in `localStorage` (`viz-strava-tokens`, refreshed through the Worker), the GitHub fine-grained token (Contents: read and write on this repo only) in `viz-github-token` if "remember" is ticked. The draft form lives in `sessionStorage` so it survives the Strava login redirect.
+- `ridemath.js` mirrors `build_data.py`'s `ride_entry`/`resolve_labels` and `strava_data.py`'s `points`/`suggestions` (Python rounding included, via `pyRound`). Change both together; `tests/parity/check.py` fails on any difference. Its segment matching skips the Python fuzzy-name step (the page only uses names from the activity itself).
+- The published `rides.json` uses segment names with their effort indices as fallback ranges, so `build_data.py` can rebuild the poster later.
+- The Worker (`workers/strava-auth/worker.js`) holds the Strava client secret. Routes: `/auth/start`, `/auth/callback` (signed 10-minute state; tokens returned in the URL fragment), `/auth/refresh`, and `/api/activities/<id>[/streams]` forwarded with CORS for `ALLOWED_ORIGINS` only. The Strava app's callback domain must be the Worker's host (localhost stays allowed for `strava_auth.py`).
+
 ## Adding a poster or a ride
+
+From the browser: the gallery's **Add poster** card (needs the Worker deployed and `src/site.json` filled in once). From the command line:
 
 1. Once per computer: create a Strava API app (callback domain `localhost`), copy `.env.example` to `.env` with its client id and secret, and run `python3 scripts/strava_auth.py`.
 2. Add the activity ids to `src/posters/<poster>/rides.json` in chronological order, with `region` (and `town` if you want one). For a new poster also create `config.json` (copy an existing one): text, `lang`, themes, `elevation` range.
 3. `python3 scripts/fetch_strava.py <poster>`.
 4. `python3 scripts/suggest_climbs.py <id>` for each ride and paste the entries you want into its `climbs` (or leave `climbs` out for the top 3). Only name places you can confirm the route passes.
-5. `python3 scripts/build_data.py <poster>`, then `python3 scripts/assemble.py`, and commit `rides.json`, `rides_data.js` and `dist/`. The gallery picks up a new poster automatically.
+5. `python3 scripts/build_data.py <poster>`, then `python3 scripts/assemble.py`, and commit `rides.json` and `rides_data.js`. The gallery picks up a new poster automatically.
 
 ## Conventions
 

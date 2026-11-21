@@ -1,0 +1,11 @@
+name = "viz-strava-auth"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+# Pages allowed to use this Worker (comma-separated origins). localhost:8000 is for local previews.
+ALLOWED_ORIGINS = "https://mreese84.github.io,http://localhost:8000"
+
+# Secrets (not in this file): run once each, from this folder
+#   npx wrangler secret put STRAVA_CLIENT_ID
+#   npx wrangler secret put STRAVA_CLIENT_SECRET

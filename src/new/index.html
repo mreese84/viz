@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add a Poster</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --page:#141317; --card:#1c1b20; --field:#25242a; --line:rgba(255,255,255,.12); --text:#f3eff0; --muted:#a39ea1; --accent:#f2a3bd; --bad:#ff8a8a; --good:#9be08a; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--page); color:var(--text); font-family:Barlow, system-ui, sans-serif; font-size:15px; line-height:1.45; }
+  a { color:var(--accent); }
+  .wrap { max-width:860px; margin:0 auto; padding:32px 16px 80px; }
+  .back { color:var(--muted); text-decoration:none; font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+  h1 { font-family:'Bodoni Moda', Didot, Georgia, serif; font-weight:400; font-size:38px; margin:14px 0 6px; }
+  .lead { color:var(--muted); margin:0 0 24px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:18px 18px 20px; margin:0 0 16px; }
+  section[hidden] { display:none; }
+  h2 { font-family:'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight:600; font-size:15px; letter-spacing:.1em; text-transform:uppercase; margin:0 0 12px; color:var(--muted); }
+  h2 .n { color:var(--accent); margin-right:8px; }
+  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+  input[type=text], input[type=number], input[type=password], textarea, select {
+    width:100%; font:inherit; color:var(--text); background:var(--field); border:1px solid var(--line); border-radius:5px; padding:8px 10px; }
+  textarea { min-height:96px; resize:vertical; }
+  input:focus, textarea:focus, select:focus { outline:2px solid var(--accent); outline-offset:0; border-color:transparent; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0 14px; }
+  .hint { color:var(--muted); font-size:12.5px; margin:4px 0 0; }
+  button { font:inherit; font-weight:500; color:var(--page); background:var(--text); border:0; border-radius:999px; padding:8px 18px; cursor:pointer; margin-top:14px; }
+  button.secondary { color:var(--text); background:transparent; border:1px solid var(--line); }
+  button:disabled { opacity:.45; cursor:default; }
+  .msg { margin:10px 0 0; font-size:14px; }
+  .msg.bad { color:var(--bad); } .msg.good { color:var(--good); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:6px 8px 6px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:500; font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
+  td input[type=text] { padding:6px 8px; }
+  .ride { border-top:1px solid var(--line); padding:12px 0 4px; }
+  .ride:first-of-type { border-top:0; padding-top:0; }
+  .ride h3 { font-size:15px; font-weight:600; margin:0 0 6px; }
+  .ride h3 small { color:var(--muted); font-weight:400; }
+  .climb { display:grid; grid-template-columns:22px 1fr; gap:4px 8px; align-items:start; margin:6px 0; }
+  .climb input[type=checkbox] { margin-top:9px; }
+  .climb .meta { grid-column:2; color:var(--muted); font-size:12px; margin-top:-2px; }
+  .themes { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:8px; }
+  .theme { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:14px; }
+  .theme .sw { display:inline-flex; gap:2px; } .theme .sw i { width:9px; height:16px; border-radius:2px; display:block; }
+  .theme .def { margin-left:auto; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:4px; }
+  .check { display:flex; align-items:center; gap:8px; margin:10px 0 0; color:var(--text); font-size:14px; }
+  .check input { margin:0; }
+  iframe { width:100%; height:80vh; border:1px solid var(--line); border-radius:6px; background:#000; margin-top:12px; }
+  .progress li { margin:2px 0; }
+  .ok { color:var(--good); } .err { color:var(--bad); }
+  code { font-size:13px; background:var(--field); padding:1px 5px; border-radius:4px; }
+  @media (max-width:600px) { .row, .row3 { grid-template-columns:1fr; } h1 { font-size:30px; } iframe { height:70vh; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../">← All posters</a>
+  <h1>Add a poster</h1>
+  <p class="lead">Turn a set of Strava rides into a poster for the gallery. For the site owner: it needs your Strava login and a GitHub token.</p>
+
+  <section id="s-setup" hidden>
+    <h2>Setup needed</h2>
+    <p>This page needs the Strava login Worker. Deploy it (see <code>workers/strava-auth/README.md</code> in the repo), put its address in <code>src/site.json</code> as <code>"stravaWorker"</code>, and push.</p>
+  </section>
+
+  <section id="s-links">
+    <h2><span class="n">1</span>Rides</h2>
+    <label for="links">Strava activity links, one per line</label>
+    <textarea id="links" placeholder="https://www.strava.com/activities/1234567890"></textarea>
+    <p class="hint">Activity numbers on their own work too. Rides are put in date order.</p>
+    <p class="msg" id="links-msg"></p>
+    <button id="b-fetch">Get rides from Strava</button>
+  </section>
+
+  <section id="s-rides" hidden>
+    <h2><span class="n">2</span>Your rides</h2>
+    <ul class="progress" id="progress"></ul>
+    <table id="ride-table" hidden><thead><tr><th>Date</th><th>Ride</th><th>Distance</th><th>Climbing</th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section id="s-details" hidden>
+    <h2><span class="n">3</span>Poster text</h2>
+    <div class="row">
+      <div><label for="f-title">Poster title (gallery and page title)</label><input type="text" id="f-title" required></div>
+      <div><label for="f-slug">Web address</label><input type="text" id="f-slug" required><p class="hint" id="slug-hint"></p></div>
+    </div>
+    <div class="row">
+      <div><label for="f-lang">Language for dates and poster flavour text</label>
+        <select id="f-lang"><option value="en">English</option><option value="it">Italian</option><option value="es">Spanish</option></select></div>
+      <div><label for="f-kicker">Line above the title (in the centre disc)</label><input type="text" id="f-kicker"></div>
+    </div>
+    <div class="row">
+      <div><label for="f-dtitle">Disc title</label><input type="text" id="f-dtitle"><p class="hint">Keep it short (about 16 characters) to fit the disc.</p></div>
+      <div><label for="f-dsub">Disc subtitle (optional)</label><input type="text" id="f-dsub"></div>
+    </div>
+    <label for="f-quote">Quote (optional, up to 3 short lines)</label>
+    <textarea id="f-quote" rows="3" style="min-height:70px"></textarea>
+    <div class="row">
+      <div><label for="f-cite">Quote credit (optional)</label><input type="text" id="f-cite" placeholder="— NAME"></div>
+      <div><label for="f-headline">Boxed headline under the stats</label><input type="text" id="f-headline"><p class="hint"><code>{rides}</code> and <code>{regions}</code> become counts.</p></div>
+    </div>
+    <label for="f-summary">Gallery card description (optional)</label>
+    <input type="text" id="f-summary">
+    <label class="check" id="strip-wrap" hidden><input type="checkbox" id="f-strip" checked> <span id="strip-text"></span></label>
+  </section>
+
+  <section id="s-perride" hidden>
+    <h2><span class="n">4</span>Regions and towns</h2>
+    <p class="hint">Every ride needs a region; rides in a row with the same region share one coloured band. The town shows when you hover over a ride.</p>
+    <table id="region-table"><thead><tr><th>Ride</th><th>Region</th><th>Town (optional)</th></tr></thead><tbody></tbody></table>
+    <datalist id="region-list"></datalist>
+  </section>
+
+  <section id="s-climbs" hidden>
+    <h2><span class="n">5</span>Climb labels</h2>
+    <p class="hint">Suggested from each ride's Strava segments, biggest climbs first. Tick the ones to label and edit the names. Labels sit at each climb's highest point.</p>
+    <div id="climb-list"></div>
+  </section>
+
+  <section id="s-look" hidden>
+    <h2><span class="n">6</span>Look</h2>
+    <label>Colour themes offered on the poster (pick one as the default)</label>
+    <div class="themes" id="theme-list"></div>
+    <div class="row">
+      <div><label for="f-flag">Stripes above the disc kicker</label>
+        <select id="f-flag"><option value="">None</option></select></div>
+      <div><label for="f-relief">Default relief</label>
+        <select id="f-relief"><option value="sqrt">Enhanced (low terrain stays visible)</option><option value="linear">True scale</option></select></div>
+    </div>
+    <div class="row3">
+      <div><label for="f-emin">Elevation at the profile base (m)</label><input type="number" id="f-emin" step="50"></div>
+      <div><label for="f-etop">Elevation at the outer edge (m)</label><input type="number" id="f-etop" step="50"></div>
+      <div><label for="f-etopft">… in feet</label><input type="number" id="f-etopft" step="100"></div>
+    </div>
+    <p class="hint" id="elev-hint"></p>
+    <button id="b-preview">Preview poster</button>
+    <p class="msg" id="preview-msg"></p>
+    <iframe id="preview" title="Poster preview" hidden></iframe>
+  </section>
+
+  <section id="s-publish" hidden>
+    <h2><span class="n">7</span>Publish</h2>
+    <p>Publishing commits the poster's files to <code id="repo-name"></code> and the site rebuilds itself, usually within a minute or two.</p>
+    <div id="gh-token-wrap">
+      <label for="f-gh">GitHub token</label>
+      <input type="password" id="f-gh" autocomplete="off" placeholder="github_pat_…">
+      <p class="hint">Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> with access to only this repository and <b>Contents: Read and write</b>. It's kept in this browser only.</p>
+      <label class="check"><input type="checkbox" id="f-gh-remember" checked> Remember on this device</label>
+    </div>
+    <p class="hint" id="gh-saved" hidden>Using the GitHub token saved in this browser. <a href="#" id="gh-forget">Forget it</a></p>
+    <button id="b-publish">Publish to the gallery</button>
+    <p class="msg" id="publish-msg"></p>
+  </section>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

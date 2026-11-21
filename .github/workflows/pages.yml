@@ -1,6 +1,6 @@
 # Build the poster and publish dist/ to GitHub Pages.
 #
-# - Pull requests: build and check that the committed dist/index.html is up to date
+# - Pull requests: build and check that the committed dist/ is up to date
 #   (if not: run `python3 scripts/assemble.py` and commit the result).
 # - Pushes to main (and manual runs on main): the same check, then deploy to GitHub Pages.
 #
@@ -32,14 +32,15 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Assemble dist/index.html
+      - name: Assemble dist/
         run: python3 scripts/assemble.py
 
       - name: Check committed dist/ is up to date
         run: |
-          if ! git diff --quiet -- dist/; then
-            echo "::error file=dist/index.html::dist/index.html is out of date. Run 'python3 scripts/assemble.py' and commit the result."
-            git diff --stat -- dist/
+          # catches changed, deleted and new (uncommitted) files under dist/
+          if [ -n "$(git status --porcelain -- dist/)" ]; then
+            echo "::error::dist/ is out of date. Run 'python3 scripts/assemble.py' and commit the result."
+            git status --short -- dist/
             exit 1
           fi
 

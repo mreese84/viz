@@ -8,11 +8,20 @@ A gallery of single-page D3 posters, one per cycling trip: each trip drawn as a 
 ## Build
 
 ```
-python3 scripts/build_data.py <poster>   # gpx/<poster>/*.gpx -> src/posters/<poster>/rides_data.js (only when ride data changes)
-python3 scripts/assemble.py              # all posters + gallery -> dist/
+python3 scripts/strava_auth.py                  # once: OAuth for your Strava account (needs .env)
+python3 scripts/fetch_strava.py [poster]        # rides.json ids -> data/strava/<id>/ (cached; --refresh to redo)
+python3 scripts/suggest_climbs.py <activity id> # ranked climb suggestions as rides.json entries
+python3 scripts/build_data.py <poster>          # data/strava (or gpx/ fallback) -> src/posters/<poster>/rides_data.js
+python3 scripts/assemble.py                     # all posters + gallery -> dist/
 ```
 
-`gpx/` is git-ignored and not in the repo (the raw tracks hold full GPS coordinates). Each `src/posters/<poster>/rides_data.js` is committed and holds everything its page needs, so day-to-day changes only need `assemble.py`. To regenerate a poster's data, put all of its GPX files back in `gpx/<poster>/` first; `build_data.py` matches files to the config's rides by start-time order, so it needs the complete set (it refuses a count mismatch).
+Each `src/posters/<poster>/rides_data.js` is committed and holds everything its page needs, so day-to-day page changes only need `assemble.py`. `build_data.py` is only for when ride data or labels change.
+
+Not in the repo (git-ignored): `.env` (Strava app id and secret; template in `.env.example`), `.strava_tokens.json` (OAuth tokens, owner-only), `data/strava/` (fetched activities and streams) and `gpx/` (GPX exports). Streams and GPX hold full GPS tracks; never commit them. Strava auth and fetch need a browser and your secrets, so they run on your computer (the cloud container can't reach strava.com).
+
+Per ride, `build_data.py` uses the fetched Strava streams when present and otherwise the GPX file. GPX files are matched to rides by start-time order, so if any ride isn't fetched, `gpx/<poster>/` must hold the complete set (it refuses a count mismatch). Both sources go through the same maths: distance from lat/lng (haversine), 9-point smoothed elevation, gain with 1.5 m hysteresis, moving time (speed > 0.9 m/s, gaps ≤ 30 s), ~30 samples/mile. Strava's own `distance` and `moving` streams are fetched but not used, so totals stay comparable.
+
+`python3 scripts/build_data.py <poster> --compare-gpx` (needs both sources) checks each ride's stream length against its GPX point count, stops on any mismatch (climb indices wouldn't be comparable), and lists every total and summit that changes, flagging anything over 2%. It writes nothing.
 
 Open `dist/index.html` (gallery) or `dist/<poster>/index.html` in a browser. Posters load D3 7.9 from cdnjs and fonts from Google Fonts; everything else is inline. The gallery needs no JavaScript. Python 3.9+ standard library only (zoneinfo needs tz data, present on macOS/Linux).
 
@@ -26,12 +35,19 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 
 ## Layout
 
-- `gpx/<poster>/` — local only, git-ignored: Strava GPX exports, one per ride (1-second points with time and elevation).
-- `src/posters/<poster>/config.json` — everything poster-specific (see below).
+- `gpx/<poster>/` — local only, git-ignored: Strava GPX exports, one per ride (1-second points with time and elevation). Fallback for rides not fetched from the API.
+- `data/strava/<id>/activity.json`, `streams.json` — local only, git-ignored: fetched by `fetch_strava.py`.
+- `src/posters/<poster>/config.json` — the page: text, language, themes, elevation scale (see below).
+- `src/posters/<poster>/rides.json` — the data inputs: rides, climbs, places (see below).
 - `src/posters/<poster>/rides_data.js` — built ride data (`const RIDES = [...]`).
-- `src/template.html` — the poster page, shared by all posters. `__TITLE__` and `/*__DATA__*/` are filled in by `assemble.py` (`const RIDES = …; const POSTER = <config without "build">;`).
+- `src/template.html` — the poster page, shared by all posters. `__TITLE__` and `/*__DATA__*/` are filled in by `assemble.py` (`const RIDES = …; const POSTER = <config.json>;`).
 - `src/gallery.html` — the gallery page; `<!--__CARDS__-->` becomes one card per poster, newest trip first.
-- `scripts/build_data.py` — parses GPX: haversine distance, 9-point smoothed elevation, gain with 1.5 m hysteresis, moving time (speed > 0.9 m/s, gaps ≤ 30 s), profile resampled to ~30 points/mile, summit and place labels.
+- `scripts/strava_client.py` — `.env`, token storage and refresh, rate-limited GET (prints usage from `X-RateLimit-*`/`X-ReadRateLimit-*`, waits for the next 15-minute window on 429, stops if the daily limit is used up). Never prints secrets or tokens. `STRAVA_API_BASE`/`STRAVA_OAUTH_BASE` exist only for testing against a local fake.
+- `scripts/strava_auth.py` — one-time OAuth: opens Strava's consent page (scope `read,activity:read_all`), catches the redirect on `http://localhost:8721/callback` (`--port` to change; the Strava app's callback domain must be `localhost`).
+- `scripts/fetch_strava.py` — `GET /activities/{id}?include_all_efforts=true` and `/activities/{id}/streams?keys=time,distance,latlng,altitude,moving&key_by_type=true` per ride.
+- `scripts/strava_data.py` — reading fetched data, segment-name matching, climb suggestions (shared by build and suggest).
+- `scripts/suggest_climbs.py` — uphill efforts (grade ≥ 2%, ≥ 20 m gain) ranked by climb category then gain; overlapping efforts sharing a summit (within 200 m) merged; top 5 printed as rides.json entries (`--all` for every one).
+- `scripts/build_data.py` — builds `rides_data.js` from Strava streams or GPX (see Build), placing summit and place labels.
 - `scripts/assemble.py` — writes `dist/` from scratch (it deletes the old one): `dist/<poster>/index.html` per poster and `dist/index.html`. Gallery thumbnails are radial silhouettes drawn in Python from each poster's data, in its default theme and relief, so they never go stale.
 - `dist/` — built output, committed; this is what GitHub Pages serves.
 
@@ -43,9 +59,17 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 - `headline`: the boxed line under the stats; `{rides}` and `{regions}` are replaced with counts.
 - `elevation`: `minM` = elevation at the profile base (0 for Italy; just under the trip's low point for high-altitude trips), `topFt`/`topM` = the outer edge, `ringsFt`/`ringsM` = dashed rings. `defaultRelief`: `sqrt` (Enhanced) or `linear` (True scale).
 - `themes` (presets with the 20 colour tokens; `r1…rN` = one per region in order of appearance) and `defaultTheme`.
-- `build`: only for `build_data.py` — `tz` (local dates), `stripName` (regex removed from Strava titles, e.g. a "Day 2:" prefix), and `rides` in chronological order: `id` (Strava activity), `town` (hover readout), `region`, `climbs` and `places`.
-  - `climbs`: `[label, start_index, end_index]`, indices are GPX trackpoint indices (= Strava segment-effort stream indices); the label sits at the highest point in that range; `end_index` null = to the end of the ride.
-  - `places`: `[name, "north"]` (northernmost point) or `[name, lat, lon]` (nearest point), optionally followed by a caption (e.g. "pueblo"); default caption is the language's word for town.
+
+## Ride inputs (src/posters/<poster>/rides.json)
+
+- `tz` (local dates), `stripName` (regex removed from Strava titles, e.g. a "Day 2:" prefix, or null).
+- `rides`, in chronological order: `id` (Strava activity), `region`, optional `town` (hover readout; falls back to the activity's location fields, which are often empty), optional `exclude` (segment names never auto-suggested), and `climbs`.
+- `climbs` entries, drawn in list order (put places first to keep their label order):
+  - `{"label", "segment": "<Strava segment name>", "near"?: index, "range"?: [start, end|null]}` — uses that effort's start/end index. Names match exactly, then ignoring case/whitespace, then by closest name; build prints any non-exact match. `near` picks among several efforts with the same name (closest start). `range` is the fallback when the activity hasn't been fetched (Italy's are the old hand-copied indices).
+  - `{"label", "range": [start, end|null]}` — manual range of trackpoint/stream indices (they're the same thing); `null` end = to the end of the ride.
+  - `{"label", "place": "northernmost" | [lat, lon], "caption"?}` — a town label at the northernmost or nearest point; default caption is the language's word for town.
+  - The label always sits at the highest (smoothed) point in its range.
+  - No `climbs` key at all: the top 3 suggestions (needs fetched data). `"climbs": []` means no labels.
 
 ## Page internals (src/template.html)
 
@@ -63,14 +87,15 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 - Hover: annulus hit-area → ride, distance, elevation and grade (±150 m window). On touch screens a tap shows the readout and it stays until you tap elsewhere.
 - Phones (≤ 600px wide, CSS only): the poster comes first and runs edge to edge, the zoom buttons sit under it instead of over its top-right corner, and the controls follow below (theme chips on one row; the "Theme" label drops below 358px). The help note has a mouse and a touch wording (`.note.mouse` / `.note.touch`, switched on `hover:none`).
 
-## Adding a poster
+## Adding a poster or a ride
 
-1. Export each ride's GPX from strava.com (⋯ → Export GPX) into `gpx/<poster>/`.
-2. Create `src/posters/<poster>/config.json` (copy an existing one): text, `lang`, themes, `elevation` range, and `build.rides` in chronological order.
-3. Climb labels need trackpoint index ranges. Italy's came from the Strava activity page's embedded segment-effort JSON (`start_index`, `end_index`), which requires a logged-in session; otherwise pick ranges from the elevation profile (find the high point's index in the GPX). Only name places you can confirm the route passes.
-4. `python3 scripts/build_data.py <poster>`, then `python3 scripts/assemble.py`. The gallery picks the new poster up automatically.
+1. Once per computer: create a Strava API app (callback domain `localhost`), copy `.env.example` to `.env` with its client id and secret, and run `python3 scripts/strava_auth.py`.
+2. Add the activity ids to `src/posters/<poster>/rides.json` in chronological order, with `region` (and `town` if you want one). For a new poster also create `config.json` (copy an existing one): text, `lang`, themes, `elevation` range.
+3. `python3 scripts/fetch_strava.py <poster>`.
+4. `python3 scripts/suggest_climbs.py <id>` for each ride and paste the entries you want into its `climbs` (or leave `climbs` out for the top 3). Only name places you can confirm the route passes.
+5. `python3 scripts/build_data.py <poster>`, then `python3 scripts/assemble.py`, and commit `rides.json`, `rides_data.js` and `dist/`. The gallery picks up a new poster automatically.
 
 ## Conventions
 
 - Poster flavour text follows the trip's language (Italian for Italy, Spanish for New Mexico): dates ("8 giu", "13 sep"), start/finish, disc text. UI and stats labels are English.
-- Distances/elevations are computed from GPX and differ slightly from Strava's own totals (e.g. Joy 1,231 ft vs Strava 1,204 ft); recorded elevations can also sit below a summit's surveyed height (Sandia Crest reads 10,323 ft vs 10,678 ft). That's expected.
+- Distances/elevations are computed from the raw points and differ slightly from Strava's own totals (e.g. Joy 1,231 ft vs Strava 1,204 ft); recorded elevations can also sit below a summit's surveyed height (Sandia Crest reads 10,323 ft vs 10,678 ft). That's expected.

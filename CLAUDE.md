@@ -34,7 +34,7 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 ## Page internals (src/template.html)
 
 - SVG viewBox 1200×1600, centre (600,600). Radii in the `R` object; angle 0 = top, clockwise, proportional to cumulative distance (`ang()`).
-- `THEMES` (6 presets) and `TOKENS` (20 colour slots). Users override per token; state persists in localStorage key `giro-marco-v1`.
+- `THEMES` (3 presets: Maglia Rosa, Dolomiti, Tricolore) and `TOKENS` (20 colour slots). Users override per token; state persists in localStorage key `giro-marco-v1`.
 - `render()` rebuilds the whole SVG on any change (theme, units, relief). Colours are written as attributes, not CSS vars, so SVG/PNG export keeps them.
 - Fonts are loaded explicitly (`FACES`, `document.fonts.load`) before the first `render()`, because label fitting measures text; `document.fonts.ready` alone can resolve before an unused weight is fetched, which made titles measure too wide.
 - Each ride has a backing wedge in the profile zone, alternating between two opacities of the `text` colour so neighbouring rides read apart in every theme.

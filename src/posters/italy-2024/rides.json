@@ -1,0 +1,66 @@
+{
+  "tz": "Europe/Rome",
+  "stripName": null,
+  "rides": [
+    {"id": 11600233983, "region": "Abruzzo", "town": "Montefino",
+     "climbs": [
+      {"label": "Salita Castilenti", "segment": "Salita Castilenti completa", "range": [1163, 2442]}
+     ]},
+    {"id": 11609126332, "region": "Abruzzo", "town": "Montefino",
+     "climbs": [
+      {"label": "Atri", "segment": "SP31@Atri", "range": [597, 2435]},
+      {"label": "Salita Marciano", "segment": "Salita Marciano completa", "range": [6149, 7123]}
+     ]},
+    {"id": 11656439784, "region": "Trentino-Alto Adige", "town": "San Giovanni di Fassa",
+     "climbs": []},
+    {"id": 11657162354, "region": "Trentino-Alto Adige", "town": "Moena",
+     "climbs": [
+      {"label": "Soraga → Pozza", "segment": "Risalita Soraga-Pozza in ciclabile", "range": [204, 571]}
+     ]},
+    {"id": 11703642308, "region": "Trentino-Alto Adige", "town": "Corvara in Badia",
+     "climbs": [
+      {"label": "Passo Gardena", "segment": "Passo Gardena", "near": 246, "range": [246, 3388]},
+      {"label": "Passo Sella", "range": [3400, 6182]},
+      {"label": "Passo Pordoi", "range": [7000, 9200]},
+      {"label": "Passo Campolongo", "range": [10300, null]}
+     ]},
+    {"id": 11710694545, "region": "Trentino-Alto Adige", "town": "Corvara in Badia",
+     "climbs": [
+      {"label": "Passo Campolongo", "segment": "[MRT] Passo Campolongo, da Corvara", "range": [147, 1811]},
+      {"label": "Falzarego · Valparola", "range": [3357, 7810]}
+     ]},
+    {"id": 11852086931, "region": "Toscana", "town": "Trequanda",
+     "climbs": [
+      {"label": "Madonnino dei Monti", "segment": "GRANFONDO DELLA VALDARBIA - Salita a Madonnino dei Monti", "range": [99, 402]},
+      {"label": "Pienza", "segment": "Pienza Climb shortcut", "range": [2228, 2468]},
+      {"label": "Castelmuzio", "segment": "GRANFONDO DELLA VALDARBIA - Salita a Castelmuzio", "range": [2654, 3060]}
+     ]},
+    {"id": 11867926748, "region": "Toscana", "town": "Trequanda",
+     "climbs": [
+      {"label": "Madonnino dei Monti", "segment": "GRANFONDO DELLA VALDARBIA - Salita a Madonnino dei Monti", "range": [214, 1167]},
+      {"label": "Trequanda", "segment": "Strada Provinciale 38 Di Trequanda Climb", "range": [2239, 2720]}
+     ]},
+    {"id": 11875958990, "region": "Toscana", "town": "Trequanda",
+     "climbs": [
+      {"label": "Montepulciano", "segment": "Montepulciano", "range": [3540, 4865]},
+      {"label": "Monticchiello", "range": [6943, 7207]},
+      {"label": "Pienza", "segment": "Cronometro Pienza 2017", "range": [7676, 8800]}
+     ]},
+    {"id": 11925078632, "region": "Toscana", "town": "Greve in Chianti",
+     "climbs": [
+      {"label": "Radda in Chianti", "segment": "Climb out of Radda", "range": [1043, 1970]},
+      {"label": "Badia a Coltibuono", "segment": "Badia COLTIBUONO da Gaiole Full", "range": [2943, 4720]}
+     ]},
+    {"id": 11941344747, "region": "Toscana", "town": "Greve in Chianti",
+     "climbs": [
+      {"label": "Firenze", "place": "northernmost"},
+      {"label": "Spedaluzzo", "segment": "Grassina - Spedaluzzo", "range": [7456, 9650]},
+      {"label": "Panzano", "segment": "GREVE IN CHIANTI - PANZANO", "range": [10461, 11948]}
+     ]},
+    {"id": 11958410684, "region": "Toscana", "town": "Greve in Chianti",
+     "climbs": [
+      {"label": "La Montagnola", "segment": "La Montagnola ola ola ", "range": [5567, 7297]},
+      {"label": "Castellina in Chianti", "segment": "Castellina Scalo - Castellina in Chianti", "range": [9920, 12226]}
+     ]}
+  ]
+}

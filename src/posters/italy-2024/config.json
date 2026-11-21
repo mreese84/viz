@@ -20,23 +20,5 @@
     "Maglia Rosa": {"page":"#18171c","bgTop":"#34303b","bgBottom":"#1f1c24","disc":"#16141a","discText":"#fbe9ef","discMuted":"#b9a5ae","profile":"#f2a3bd","profileLine":"#ffe1ea","accent":"#ff7aa2","band":"#3f3946","bandAlt":"#4a4352","bandText":"#f3e6eb","r1":"#a68d2a","r2":"#4f8fca","r3":"#de6a3a","regionText":"#16141a","text":"#f6eef1","muted":"#a7979f","grid":"#f2a3bd","tick":"#f2a3bd"},
     "Dolomiti": {"page":"#0f1820","bgTop":"#34505f","bgBottom":"#1a2a35","disc":"#101c25","discText":"#eef5f8","discMuted":"#9fb4c0","profile":"#e9f1f4","profileLine":"#ffffff","accent":"#7fd6c9","band":"#3b5666","bandAlt":"#446172","bandText":"#eef5f8","r1":"#a68d2a","r2":"#5b97cf","r3":"#d86a3e","regionText":"#101c25","text":"#eef4f7","muted":"#9fb3bf","grid":"#bcd3dd","tick":"#d7e6ec"},
     "Tricolore": {"page":"#e6dccb","bgTop":"#f7f1e6","bgBottom":"#ece2cf","disc":"#1f4a35","discText":"#f7f1e6","discMuted":"#b9cdbf","profile":"#2f6b4b","profileLine":"#183d2a","accent":"#c8102e","band":"#e3d7c1","bandAlt":"#d9cbb1","bandText":"#2a2a24","r1":"#9a8420","r2":"#3f74ad","r3":"#c8432f","regionText":"#f7f1e6","text":"#23271f","muted":"#6f6a5c","grid":"#8a8270","tick":"#2f6b4b"}
-  },
-  "build": {
-    "tz": "Europe/Rome",
-    "stripName": null,
-    "rides": [
-      {"id": 11600233983, "town": "Montefino", "region": "Abruzzo", "climbs": [["Salita Castilenti", 1163, 2442]]},
-      {"id": 11609126332, "town": "Montefino", "region": "Abruzzo", "climbs": [["Atri", 597, 2435], ["Salita Marciano", 6149, 7123]]},
-      {"id": 11656439784, "town": "San Giovanni di Fassa", "region": "Trentino-Alto Adige", "climbs": []},
-      {"id": 11657162354, "town": "Moena", "region": "Trentino-Alto Adige", "climbs": [["Soraga → Pozza", 204, 571]]},
-      {"id": 11703642308, "town": "Corvara in Badia", "region": "Trentino-Alto Adige", "climbs": [["Passo Gardena", 246, 3388], ["Passo Sella", 3400, 6182], ["Passo Pordoi", 7000, 9200], ["Passo Campolongo", 10300, null]]},
-      {"id": 11710694545, "town": "Corvara in Badia", "region": "Trentino-Alto Adige", "climbs": [["Passo Campolongo", 147, 1811], ["Falzarego · Valparola", 3357, 7810]]},
-      {"id": 11852086931, "town": "Trequanda", "region": "Toscana", "climbs": [["Madonnino dei Monti", 99, 402], ["Pienza", 2228, 2468], ["Castelmuzio", 2654, 3060]]},
-      {"id": 11867926748, "town": "Trequanda", "region": "Toscana", "climbs": [["Madonnino dei Monti", 214, 1167], ["Trequanda", 2239, 2720]]},
-      {"id": 11875958990, "town": "Trequanda", "region": "Toscana", "climbs": [["Montepulciano", 3540, 4865], ["Monticchiello", 6943, 7207], ["Pienza", 7676, 8800]]},
-      {"id": 11925078632, "town": "Greve in Chianti", "region": "Toscana", "climbs": [["Radda in Chianti", 1043, 1970], ["Badia a Coltibuono", 2943, 4720]]},
-      {"id": 11941344747, "town": "Greve in Chianti", "region": "Toscana", "climbs": [["Spedaluzzo", 7456, 9650], ["Panzano", 10461, 11948]], "places": [["Firenze", "north"]]},
-      {"id": 11958410684, "town": "Greve in Chianti", "region": "Toscana", "climbs": [["La Montagnola", 5567, 7297], ["Castellina in Chianti", 9920, 12226]]}
-    ]
   }
 }

@@ -20,20 +20,5 @@
     "Sandía": {"page":"#171a17","bgTop":"#2e3a30","bgBottom":"#1a211b","disc":"#141914","discText":"#f6e9ec","discMuted":"#b6a6aa","profile":"#ef7d92","profileLine":"#ffd5dd","accent":"#9be08a","band":"#3a4a3c","bandAlt":"#445646","bandText":"#f0e8ea","r1":"#4f9a5a","regionText":"#141914","text":"#f3eef0","muted":"#a9b3aa","grid":"#ef7d92","tick":"#ef7d92"},
     "Turquesa": {"page":"#0d1d20","bgTop":"#1f4a4f","bgBottom":"#12292d","disc":"#0e2023","discText":"#eef6f2","discMuted":"#9cc1bb","profile":"#46bfb0","profileLine":"#c9f2ea","accent":"#f2b84b","band":"#2a5a5f","bandAlt":"#33666b","bandText":"#eef6f2","r1":"#b2472f","regionText":"#f6efe9","text":"#eef5f2","muted":"#9dbcb7","grid":"#7fd3c6","tick":"#7fd3c6"},
     "Adobe": {"page":"#e9dccb","bgTop":"#f4ebdf","bgBottom":"#e6d5c0","disc":"#8a3b25","discText":"#f7efe4","discMuted":"#e6c8b3","profile":"#b5532f","profileLine":"#6e2a15","accent":"#1f7f7a","band":"#e2d2bc","bandAlt":"#d6c3a9","bandText":"#3a2a1e","r1":"#1f7f7a","regionText":"#f7efe4","text":"#2f241b","muted":"#7a6656","grid":"#9a8672","tick":"#b5532f"}
-  },
-  "build": {
-    "tz": "America/Denver",
-    "stripName": "^Day \\d+:\\s*",
-    "rides": [
-      {"id": 1839978973, "town": "Albuquerque", "region": "Nuevo México",
-       "climbs": [["Sandia Crest", 10000, 11300], ["La Luz", 18500, 19500]],
-       "places": [["Placitas", 35.3069, -106.4245, "pueblo"]]},
-      {"id": 1841792994, "town": "Albuquerque → Santa Fe", "region": "Nuevo México",
-       "climbs": [["Ski Santa Fe (ish)", 23500, 25000]],
-       "places": [["Madrid", 35.4067, -106.1531, "pueblo"], ["Santa Fe", 35.6870, -105.9378, "ciudad"]]},
-      {"id": 1843818680, "town": "Albuquerque", "region": "Nuevo México",
-       "climbs": [],
-       "places": [["Cedar Crest", 35.1087, -106.3714, "pueblo"]]}
-    ]
   }
 }

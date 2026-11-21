@@ -1,12 +1,9 @@
-"""Parse a poster's GPX files and write its ride data.
+"""Build a poster's ride data from its GPX files.
 
     python3 scripts/build_data.py <poster>      # e.g. italy-2024
 
-Reads gpx/<poster>/*.gpx (git-ignored) and src/posters/<poster>/config.json ("build" section),
-writes src/posters/<poster>/rides_data.js (the RIDES array the page draws).
-
-Rides are sorted by start time; config "build.rides" is in that same order.
-Climb start/end indices are Strava segment-effort stream indices (= GPX trackpoint indices).
+Reads src/posters/<poster>/rides.json (rides in chronological order, with climbs and places) and
+gpx/<poster>/*.gpx (git-ignored), writes src/posters/<poster>/rides_data.js (the RIDES array the page draws).
 """
 import glob, json, math, os, re, sys
 import xml.etree.ElementTree as ET
@@ -27,25 +24,49 @@ def smooth(v, w):
     for x in v: c.append(c[-1]+x)
     return [(c[min(n, i+w+1)]-c[max(0, i-w)])/(min(n, i+w+1)-max(0, i-w)) for i in range(n)]
 
-def main(poster):
-    cfg = json.load(open(os.path.join(ROOT, "src", "posters", poster, "config.json"), encoding="utf-8"))["build"]
-    tz = ZoneInfo(cfg["tz"])
-    strip = re.compile(cfg["stripName"]) if cfg.get("stripName") else None
+# ---------- Sources: each gives the ride's name and points [(lat, lon, ele, datetime)] ----------
+def gpx_rides(poster):
+    """GPX files of a poster, in start-time order: [(name, pts)]."""
     files = []
     for f in glob.glob(os.path.join(ROOT, "gpx", poster, "*.gpx")):
         root = ET.parse(f).getroot()
         files.append((root.find(".//g:trkpt/g:time", NS).text, f, root))
-    files.sort()
-    if len(files) != len(cfg["rides"]):
-        sys.exit(f"{len(files)} GPX files in gpx/{poster}/ but {len(cfg['rides'])} rides in the config")
+    out = []
+    for _, f, root in sorted(files):
+        pts = [(float(p.get("lat")), float(p.get("lon")), float(p.find("g:ele", NS).text),
+                datetime.fromisoformat(p.find("g:time", NS).text.replace("Z", "+00:00")))
+               for p in root.iterfind(".//g:trkpt", NS)]
+        out.append((root.find("g:trk/g:name", NS).text.strip(), pts))
+    return out
+
+# ---------- Labels ----------
+def resolve_labels(ride, pts, efforts=None):
+    """rides.json "climbs" entries -> [(label, kind, info)] with kind "range" (info=(start, end)) or
+    "place" (info=(index, caption)). Segment climbs use their fallback range when no efforts are available."""
+    out = []
+    for c in ride.get("climbs", []):
+        if "place" in c:
+            if c["place"] == "northernmost":
+                im = max(range(len(pts)), key=lambda i: pts[i][0])
+            else:
+                im = min(range(len(pts)), key=lambda i: hav(pts[i], c["place"]))
+            out.append((c["label"], "place", (im, c.get("caption"))))
+        elif "range" in c:
+            out.append((c["label"], "range", tuple(c["range"])))
+        else:
+            print(f'  ! "{c["label"]}": segment climb without a fallback range, skipped (activity not fetched)')
+    return out
+
+def main(poster):
+    cfg = json.load(open(os.path.join(ROOT, "src", "posters", poster, "rides.json"), encoding="utf-8"))
+    tz = ZoneInfo(cfg["tz"])
+    strip = re.compile(cfg["stripName"]) if cfg.get("stripName") else None
+    sources = gpx_rides(poster)
+    if len(sources) != len(cfg["rides"]):
+        sys.exit(f"{len(sources)} GPX files in gpx/{poster}/ but {len(cfg['rides'])} rides in rides.json")
 
     rides = []
-    for k, (t0, f, root) in enumerate(files):
-        meta = cfg["rides"][k]
-        pts = []
-        for p in root.iterfind(".//g:trkpt", NS):
-            pts.append((float(p.get("lat")), float(p.get("lon")), float(p.find("g:ele", NS).text),
-                        datetime.fromisoformat(p.find("g:time", NS).text.replace("Z", "+00:00"))))
+    for k, (ride, (name, pts)) in enumerate(zip(cfg["rides"], sources)):
         dist = [0.0]; moving = 0.0
         for i in range(1, len(pts)):
             d = hav(pts[i-1], pts[i]); dt = (pts[i][3]-pts[i-1][3]).total_seconds()
@@ -64,26 +85,21 @@ def main(poster):
             while j < len(dist)-1 and dist[j+1] < target: j += 1
             prof.append(round(es[j], 1))
         labels = []
-        # place labels: ["Name", "north"] = northernmost point, ["Name", lat, lon] = nearest point;
-        # an optional last string is the caption under the name (default: the poster language's word for town)
-        for pl in meta.get("places", []):
-            if pl[1] == "north":
-                im = max(range(len(pts)), key=lambda i: pts[i][0]); sub = pl[2] if len(pl) > 2 else None
-            else:
-                im = min(range(len(pts)), key=lambda i: hav(pts[i], pl[1:3])); sub = pl[3] if len(pl) > 3 else None
-            label = dict(name=pl[0], at=round(dist[im]/total, 4), ele=round(es[im], 1), place=True)
-            if sub: label["sub"] = sub
-            labels.append(label)
-        # climbs: ["Label", start_index, end_index or null]; the label sits at the highest point in range
-        for name, si, ei in meta.get("climbs", []):
-            ei = len(es)-1 if ei is None else min(ei, len(es)-1)
-            im = max(range(si, ei+1), key=lambda i: es[i])
-            labels.append(dict(name=name, at=round(dist[im]/total, 4), ele=round(es[im], 1)))
-        name = root.find("g:trk/g:name", NS).text.strip()
+        for label, kind, info in resolve_labels(ride, pts):
+            if kind == "place":
+                im, caption = info
+                lab = dict(name=label, at=round(dist[im]/total, 4), ele=round(es[im], 1), place=True)
+                if caption: lab["sub"] = caption
+            else:   # summit = highest point in the range; end null = to the end of the ride
+                si, ei = info
+                ei = len(es)-1 if ei is None else min(ei, len(es)-1)
+                im = max(range(si, ei+1), key=lambda i: es[i])
+                lab = dict(name=label, at=round(dist[im]/total, 4), ele=round(es[im], 1))
+            labels.append(lab)
         if strip: name = strip.sub("", name).strip()
         st = pts[0][3].astimezone(tz)
         rides.append(dict(
-            id=meta["id"], name=name, town=meta["town"], region=meta["region"],
+            id=ride["id"], name=name, town=ride["town"], region=ride["region"],
             date=st.strftime("%Y-%m-%d"), dist=round(total, 1), gain=round(gain, 1),
             moving=round(moving), elapsed=round((pts[-1][3]-pts[0][3]).total_seconds()),
             maxEle=round(max(es), 1), minEle=round(min(es), 1), profile=prof, climbs=labels,

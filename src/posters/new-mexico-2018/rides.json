@@ -1,0 +1,22 @@
+{
+  "tz": "America/Denver",
+  "stripName": "^Day \\d+:\\s*",
+  "rides": [
+    {"id": 1839978973, "region": "Nuevo México", "town": "Albuquerque",
+     "climbs": [
+      {"label": "Placitas", "place": [35.3069, -106.4245], "caption": "pueblo"},
+      {"label": "Sandia Crest", "range": [10000, 11300]},
+      {"label": "La Luz", "range": [18500, 19500]}
+     ]},
+    {"id": 1841792994, "region": "Nuevo México", "town": "Albuquerque → Santa Fe",
+     "climbs": [
+      {"label": "Madrid", "place": [35.4067, -106.1531], "caption": "pueblo"},
+      {"label": "Santa Fe", "place": [35.687, -105.9378], "caption": "ciudad"},
+      {"label": "Ski Santa Fe (ish)", "range": [23500, 25000]}
+     ]},
+    {"id": 1843818680, "region": "Nuevo México", "town": "Albuquerque",
+     "climbs": [
+      {"label": "Cedar Crest", "place": [35.1087, -106.3714], "caption": "pueblo"}
+     ]}
+  ]
+}

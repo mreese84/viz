@@ -1,8 +1,9 @@
-# Build the poster and publish dist/ to GitHub Pages.
+# Build the site and publish it to GitHub Pages.
 #
-# - Pull requests: build and check that the committed dist/ is up to date
-#   (if not: run `python3 scripts/assemble.py` and commit the result).
-# - Pushes to main (and manual runs on main): the same check, then deploy to GitHub Pages.
+# dist/ is not committed: every run builds it with scripts/assemble.py.
+# - Pull requests: build (and run the checks) only.
+# - Pushes to main (and manual runs on main): build, then deploy dist/ to GitHub Pages.
+#   This includes commits made by the gallery's "Add poster" page.
 #
 # One-time repo setting: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
 
@@ -34,15 +35,6 @@ jobs:
 
       - name: Assemble dist/
         run: python3 scripts/assemble.py
-
-      - name: Check committed dist/ is up to date
-        run: |
-          # catches changed, deleted and new (uncommitted) files under dist/
-          if [ -n "$(git status --porcelain -- dist/)" ]; then
-            echo "::error::dist/ is out of date. Run 'python3 scripts/assemble.py' and commit the result."
-            git status --short -- dist/
-            exit 1
-          fi
 
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

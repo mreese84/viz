@@ -23,14 +23,14 @@ Per ride, `build_data.py` uses the fetched Strava streams when present and other
 
 `python3 scripts/build_data.py <poster> --compare-gpx` (needs both sources) checks each ride's stream length against its GPX point count, stops on any mismatch (climb indices wouldn't be comparable), and lists every total and summit that changes, flagging anything over 2%. It writes nothing.
 
-Open `dist/index.html` (gallery) or `dist/<poster>/index.html` in a browser. Posters load D3 7.9 from cdnjs and fonts from Google Fonts; everything else is inline. The gallery needs no JavaScript. Python 3.9+ standard library only (zoneinfo needs tz data, present on macOS/Linux).
+`dist/` is generated and git-ignored; run `assemble.py`, then open `dist/index.html` (gallery) or `dist/<poster>/index.html` in a browser. Posters load D3 7.9 from cdnjs and fonts from Google Fonts; everything else is inline. The gallery needs no JavaScript. Python 3.9+ standard library only (zoneinfo needs tz data, present on macOS/Linux).
 
 ## Deploy
 
 GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/ (gallery), posters at `/viz/<poster>/`.
 
-- Every pull request and push to `main` re-runs `assemble.py` and fails if anything under `dist/` differs from what's committed (changed, deleted or new files), so always rebuild and commit `dist/` together with `src/` changes.
-- A push to `main` (or a manual run on `main`) then publishes `dist/` as the site. Nothing else deploys.
+- `dist/` is not committed. Every pull request and push to `main` builds it with `assemble.py` (a broken config or data file fails the build).
+- A push to `main` (or a manual run on `main`) then publishes the built `dist/` as the site. Nothing else deploys. Commits from the gallery's "Add poster" page are pushes to `main`, so they deploy the same way.
 - Repo setting this relies on: Settings → Pages → Source = "GitHub Actions" (which also restricts the `github-pages` environment to `main`).
 
 ## Layout
@@ -49,7 +49,7 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 - `scripts/suggest_climbs.py` — uphill efforts (grade ≥ 2%, ≥ 20 m gain) ranked by climb category then gain; pieces of one climb merged (overlapping efforts where one lies inside the other, or whose tops are within 500 m along the ride); top 5 printed as rides.json entries (`--all` for every one).
 - `scripts/build_data.py` — builds `rides_data.js` from Strava streams or GPX (see Build), placing summit and place labels.
 - `scripts/assemble.py` — writes `dist/` from scratch (it deletes the old one): `dist/<poster>/index.html` per poster and `dist/index.html`. Gallery thumbnails are radial silhouettes drawn in Python from each poster's data, in its default theme and relief, so they never go stale.
-- `dist/` — built output, committed; this is what GitHub Pages serves.
+- `dist/` — built output, git-ignored; CI builds it and GitHub Pages serves it.
 
 ## Poster config (src/posters/<poster>/config.json)
 
@@ -93,7 +93,7 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 2. Add the activity ids to `src/posters/<poster>/rides.json` in chronological order, with `region` (and `town` if you want one). For a new poster also create `config.json` (copy an existing one): text, `lang`, themes, `elevation` range.
 3. `python3 scripts/fetch_strava.py <poster>`.
 4. `python3 scripts/suggest_climbs.py <id>` for each ride and paste the entries you want into its `climbs` (or leave `climbs` out for the top 3). Only name places you can confirm the route passes.
-5. `python3 scripts/build_data.py <poster>`, then `python3 scripts/assemble.py`, and commit `rides.json`, `rides_data.js` and `dist/`. The gallery picks up a new poster automatically.
+5. `python3 scripts/build_data.py <poster>`, then `python3 scripts/assemble.py`, and commit `rides.json` and `rides_data.js`. The gallery picks up a new poster automatically.
 
 ## Conventions
 

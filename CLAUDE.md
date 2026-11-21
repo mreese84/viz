@@ -46,7 +46,7 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 - `scripts/strava_auth.py` — one-time OAuth: opens Strava's consent page (scope `read,activity:read_all`), catches the redirect on `http://localhost:8721/callback` (`--port` to change; the Strava app's callback domain must be `localhost`).
 - `scripts/fetch_strava.py` — `GET /activities/{id}?include_all_efforts=true` and `/activities/{id}/streams?keys=time,distance,latlng,altitude,moving&key_by_type=true` per ride.
 - `scripts/strava_data.py` — reading fetched data, segment-name matching, climb suggestions (shared by build and suggest).
-- `scripts/suggest_climbs.py` — uphill efforts (grade ≥ 2%, ≥ 20 m gain) ranked by climb category then gain; overlapping efforts sharing a summit (within 200 m) merged; top 5 printed as rides.json entries (`--all` for every one).
+- `scripts/suggest_climbs.py` — uphill efforts (grade ≥ 2%, ≥ 20 m gain) ranked by climb category then gain; pieces of one climb merged (overlapping efforts where one lies inside the other, or whose tops are within 500 m along the ride); top 5 printed as rides.json entries (`--all` for every one).
 - `scripts/build_data.py` — builds `rides_data.js` from Strava streams or GPX (see Build), placing summit and place labels.
 - `scripts/assemble.py` — writes `dist/` from scratch (it deletes the old one): `dist/<poster>/index.html` per poster and `dist/index.html`. Gallery thumbnails are radial silhouettes drawn in Python from each poster's data, in its default theme and relief, so they never go stale.
 - `dist/` — built output, committed; this is what GitHub Pages serves.

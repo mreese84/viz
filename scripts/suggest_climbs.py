@@ -3,7 +3,7 @@
     python3 scripts/suggest_climbs.py <activity id> [--all]
 
 Ranks uphill efforts (average grade >= 2%, at least 20 m of climbing) by climb category, then elevation gain,
-merges overlapping efforts that share a summit, and prints the top 5 (--all: every one) as ready-to-paste
+merges pieces of the same climb (one effort inside another, or tops within 500 m), and prints the top 5 (--all: every one) as ready-to-paste
 rides.json "climbs" entries. A ride with no "climbs" key in rides.json gets the top 3 automatically.
 Run fetch_strava.py first.
 """
@@ -27,7 +27,7 @@ def main():
     sugg = sd.suggestions(activity, pts, exclude)
     shown = sugg if "--all" in sys.argv else sugg[:5]
     n_eff = len(activity.get("segment_efforts", []))
-    print(f"{activity.get('name', rid)}: {n_eff} segment efforts, {len(sugg)} uphill after merging shared summits"
+    print(f"{activity.get('name', rid)}: {n_eff} segment efforts, {len(sugg)} distinct uphill climbs"
           + (f", {len(exclude)} excluded by name" if exclude else ""))
     if not shown: return
     w = max(len(c["name"]) for c in shown)

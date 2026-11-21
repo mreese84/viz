@@ -56,10 +56,19 @@ def match_segment(efforts, name, near=None):
 
 # ---------- Climb suggestions ----------
 CATEGORY = {5: "HC", 4: "Cat 1", 3: "Cat 2", 2: "Cat 3", 1: "Cat 4", 0: "uncat."}
+SUMMIT_GAP = 500   # metres along the ride within which two overlapping efforts top out at the same summit
+
+def same_climb(a, b):
+    """Two efforts are one climb when they overlap and either one lies entirely inside the other (a stretch of
+    a longer climb, e.g. "Capulin to 10k" inside "… to the Sandia Crest") or they top out within SUMMIT_GAP
+    of each other (e.g. Crest House vs the lookout platform a few hundred metres on)."""
+    if a["si"] > b["ei"] or b["si"] > a["ei"]: return False
+    nested = (a["si"] <= b["si"] and b["ei"] <= a["ei"]) or (b["si"] <= a["si"] and a["ei"] <= b["ei"])
+    return nested or abs(a["summit_d"] - b["summit_d"]) <= SUMMIT_GAP
 
 def suggestions(activity, pts, exclude=(), min_grade=2.0, min_gain=20.0):
-    """Uphill segment efforts ranked by climb category, then elevation gain; overlapping efforts that share a
-    summit merged into the best-ranked one. Returns dicts with effort, gain, summit index and elevation."""
+    """Uphill segment efforts ranked by climb category, then elevation gain, with pieces of the same climb merged
+    into the best-ranked one (see same_climb). Returns dicts with effort, gain, summit index and elevation."""
     excl = {norm(x) for x in exclude}
     dist = [0.0]
     for i in range(1, len(pts)): dist.append(dist[-1] + hav(pts[i-1], pts[i]))
@@ -76,10 +85,9 @@ def suggestions(activity, pts, exclude=(), min_grade=2.0, min_gain=20.0):
                           gain=gain, summit=top, summit_ele=max(ele), summit_d=dist[top]))
     cands.sort(key=lambda c: (-c["cat"], -c["gain"]))
     kept = []
-    for c in cands:   # same summit (within 200 m along the ride) and overlapping ranges: keep the better one
-        if any(k["si"] <= c["ei"] and c["si"] <= k["ei"] and abs(k["summit_d"] - c["summit_d"]) <= 200 for k in kept):
-            continue
-        kept.append(c)
+    for c in cands:   # best-ranked first, so each climb is represented by its best segment
+        if not any(same_climb(k, c) for k in kept):
+            kept.append(c)
     names = [e["name"] for e in activity.get("segment_efforts", [])]
     for c in kept:
         c["entry"] = {"label": c["name"].strip(), "segment": c["name"]}

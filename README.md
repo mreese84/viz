@@ -1,6 +1,8 @@
 # Il Giro d'Italia di Marco
 
-Circular elevation-profile poster of 12 rides in Italy, June–July 2024 (Abruzzo, Dolomiti, Toscana).
+Circular elevation-profile poster of 12 rides in Italy, June–July 2024 (Abruzzo, Trentino-Alto Adige, Toscana).
+
+**Live:** https://mreese84.github.io/viz/
 
 ```
 python3 scripts/assemble.py

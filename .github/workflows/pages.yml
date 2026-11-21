@@ -1,0 +1,64 @@
+# Build the poster and publish dist/ to GitHub Pages.
+#
+# - Pull requests: build and check that the committed dist/index.html is up to date
+#   (if not: run `python3 scripts/assemble.py` and commit the result).
+# - Pushes to main (and manual runs on main): the same check, then deploy to GitHub Pages.
+#
+# One-time repo setting: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; let an in-progress deployment finish rather than cancelling it.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Assemble dist/index.html
+        run: python3 scripts/assemble.py
+
+      - name: Check committed dist/ is up to date
+        run: |
+          if ! git diff --quiet -- dist/; then
+            echo "::error file=dist/index.html::dist/index.html is out of date. Run 'python3 scripts/assemble.py' and commit the result."
+            git diff --stat -- dist/
+            exit 1
+          fi
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

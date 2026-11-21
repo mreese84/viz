@@ -5,11 +5,12 @@
     {"id": 1839978973, "region": "Nuevo México", "town": "Albuquerque",
      "climbs": [
       {"label": "Placitas", "place": [35.3069, -106.4245], "caption": "pueblo"},
-      {"label": "Sandia Crest", "range": [10000, 11300]},
+      {"label": "Sandia Crest", "segment": "Bernalillo Super 8 to the Sandia Crest lookout platform", "range": [2165, 10906]},
       {"label": "La Luz", "range": [18500, 19500]}
      ]},
     {"id": 1841792994, "region": "Nuevo México", "town": "Albuquerque → Santa Fe",
      "climbs": [
+      {"label": "Tramway", "segment": "Gas station (west) to County Line", "range": [781, 2586]},
       {"label": "Madrid", "place": [35.4067, -106.1531], "caption": "pueblo"},
       {"label": "Santa Fe", "place": [35.687, -105.9378], "caption": "ciudad"},
       {"label": "Ski Santa Fe (ish)", "range": [23500, 25000]}

@@ -33,6 +33,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Tests
+        run: |
+          python3 tests/test_suggestions.py
+          python3 tests/parity/check.py   # browser (JS) and Python ride maths must agree
+
       - name: Assemble dist/
         run: python3 scripts/assemble.py
 

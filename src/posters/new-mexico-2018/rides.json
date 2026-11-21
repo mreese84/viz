@@ -17,6 +17,7 @@
      ]},
     {"id": 1843818680, "region": "Nuevo México", "town": "Albuquerque",
      "climbs": [
+      {"label": "Tramway", "segment": "Gas station (west) to County Line", "range": [770, 2503]},
       {"label": "Cedar Crest", "place": [35.1087, -106.3714], "caption": "pueblo"}
      ]}
   ]

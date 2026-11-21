@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il Giro d'Italia di Marco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&family=Barlow+Condensed:wght@400;500;600&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+  :root { --page:#18171c; --ui-text:#f6eef1; --ui-muted:#a7979f; --ui-line:rgba(255,255,255,.14); --ui-chip:rgba(255,255,255,.06); }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--page); color:var(--ui-text); font-family:Barlow, system-ui, sans-serif; transition:background .3s; }
+  .wrap { max-width:960px; margin:0 auto; padding:16px 14px 48px; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin-bottom:14px; font-size:13px; }
+  .group { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .group > span.lbl { color:var(--ui-muted); text-transform:uppercase; letter-spacing:.08em; font-size:11px; margin-right:2px; }
+  button, .chip { font:inherit; color:var(--ui-text); background:var(--ui-chip); border:1px solid var(--ui-line); border-radius:999px; padding:5px 11px; cursor:pointer; }
+  button:hover { border-color:var(--ui-muted); }
+  button[aria-pressed="true"] { background:var(--ui-text); color:var(--page); border-color:var(--ui-text); }
+  .swatch { display:inline-flex; gap:2px; vertical-align:middle; margin-right:6px; }
+  .swatch i { width:9px; height:14px; border-radius:2px; display:block; }
+  details { width:100%; }
+  summary { cursor:pointer; color:var(--ui-muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em; list-style:none; }
+  summary::-webkit-details-marker { display:none; }
+  summary::before { content:"▸ "; } details[open] summary::before { content:"▾ "; }
+  .pickers { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:8px 14px; padding:12px 0 4px; }
+  .pickers label { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ui-text); }
+  .pickers input[type=color] { width:30px; height:24px; padding:0; border:1px solid var(--ui-line); border-radius:6px; background:none; cursor:pointer; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; padding:8px 0 2px; }
+  .status { color:var(--ui-muted); font-size:12px; align-self:center; }
+  .poster { position:relative; width:100%; box-shadow:0 18px 50px rgba(0,0,0,.35); border-radius:3px; overflow:hidden; }
+  .poster svg { display:block; width:100%; height:auto; }
+  .zoombar { position:absolute; top:10px; right:10px; display:flex; align-items:center; gap:4px; background:rgba(15,15,18,.72); padding:4px; border-radius:999px; backdrop-filter:blur(4px); }
+  .zoombar button { width:30px; height:30px; padding:0; border-radius:50%; color:#fff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); font-size:17px; line-height:1; }
+  .zoombar button:disabled { opacity:.35; cursor:default; }
+  .zoombar span { color:#ddd; font-size:11.5px; min-width:40px; text-align:center; font-variant-numeric:tabular-nums; }
+  .tip { position:absolute; z-index:2; pointer-events:none; background:rgba(15,15,18,.92); color:#fff; font-size:12.5px; line-height:1.35; padding:7px 10px; border-radius:6px; white-space:nowrap; opacity:0; transition:opacity .12s; font-family:Barlow, sans-serif; }
+  .tip b { font-weight:500; }
+  .tip .m { color:#c9c3c6; }
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.82); display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; z-index:10; padding:20px; }
+  .overlay.on { display:flex; }
+  .overlay img { max-width:min(92vw,700px); max-height:78vh; box-shadow:0 10px 40px rgba(0,0,0,.6); }
+  .overlay p { color:#ddd; font-size:13px; margin:0; text-align:center; }
+  .note { color:var(--ui-muted); font-size:12px; margin-top:14px; line-height:1.5; }
+  @media (max-width:600px){ .toolbar { gap:8px 12px; } button { padding:5px 9px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="toolbar">
+    <div class="group" id="themes"><span class="lbl">Theme</span></div>
+    <div class="group"><span class="lbl">Units</span>
+      <button data-units="imperial">mi · ft</button><button data-units="metric">km · m</button></div>
+    <div class="group"><span class="lbl">Relief</span>
+      <button data-relief="sqrt" title="Square-root scale: low Tuscan hills stay visible next to Dolomite passes">Enhanced</button><button data-relief="linear" title="Linear scale: elevation drawn to true proportion">True scale</button></div>
+    <details id="custom">
+      <summary>Customize colors</summary>
+      <div class="pickers" id="pickers"></div>
+      <div class="actions">
+        <button id="copyTheme">Copy theme JSON</button>
+        <button id="pasteTheme">Paste theme JSON</button>
+        <button id="resetTheme">Reset to preset</button>
+        <span class="status" id="status"></span>
+      </div>
+    </details>
+    <div class="group"><button id="saveImg">Save as image</button><button id="copySvg">Copy SVG</button></div>
+  </div>
+  <div class="poster" id="poster"><div class="tip" id="tip"></div>
+    <div class="zoombar" aria-label="Zoom controls">
+      <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+      <button id="zout" title="Zoom out" aria-label="Zoom out">−</button>
+      <button id="zreset" title="Show whole poster" aria-label="Reset zoom" disabled>⤢</button>
+      <span id="zlevel">100%</span>
+    </div>
+  </div>
+  <p class="note"><b>Zoom:</b> pinch, ⌘/Ctrl + scroll, double-click (Shift + double-click to zoom out) or the + / − buttons; drag to pan once zoomed. Hover over the profile to read the distance, elevation and grade at any point. Climb summits are named from Strava segments; distance, elevation and moving time are calculated from the GPX files.</p>
+</div>
+<div class="overlay" id="overlay"><img id="ovImg" alt="Poster image"><p>Right-click or long-press the image to save it. Tap anywhere else to close.</p></div>
+
+<script>
+/*__DATA__*/
+</script>
+<script>
+// ---------- Themes ----------
+const TOKENS = [
+  ["bgTop","Background top"],["bgBottom","Background bottom"],["page","Page around poster"],
+  ["disc","Center disc"],["discText","Disc title"],["discMuted","Disc subtitle"],
+  ["profile","Elevation fill"],["profileLine","Elevation edge"],["accent","Summits & start"],
+  ["band","Ride band"],["bandAlt","Ride band (alternate)"],["bandText","Ride band text"],
+  ["r1","Region: Abruzzo"],["r2","Region: Dolomiti"],["r3","Region: Toscana"],["regionText","Region text"],
+  ["text","Main text"],["muted","Secondary text"],["grid","Elevation rings"],["tick","Mile ticks"]
+];
+const THEMES = {
+  "Maglia Rosa": {page:"#18171c",bgTop:"#34303b",bgBottom:"#1f1c24",disc:"#16141a",discText:"#fbe9ef",discMuted:"#b9a5ae",profile:"#f2a3bd",profileLine:"#ffe1ea",accent:"#ff7aa2",band:"#3f3946",bandAlt:"#4a4352",bandText:"#f3e6eb",r1:"#a68d2a",r2:"#4f8fca",r3:"#de6a3a",regionText:"#16141a",text:"#f6eef1",muted:"#a7979f",grid:"#f2a3bd",tick:"#f2a3bd"},
+  "Chianti": {page:"#1a070c",bgTop:"#6b1f33",bgBottom:"#320d17",disc:"#23080f",discText:"#f8ecdc",discMuted:"#cfa99c",profile:"#e8c068",profileLine:"#fff0bf",accent:"#f2cf7a",band:"#7a2a3d",bandAlt:"#873547",bandText:"#fbeee0",r1:"#a68d2a",r2:"#5a93cc",r3:"#e06e40",regionText:"#23080f",text:"#f8ede3",muted:"#cda8a2",grid:"#e8c068",tick:"#e8c068"},
+  "Terracotta": {page:"#4a1f14",bgTop:"#cf6e50",bgBottom:"#9a432d",disc:"#5e2617",discText:"#fff3e4",discMuted:"#f2c6ad",profile:"#f5e6c8",profileLine:"#fffaf0",accent:"#fff1c9",band:"#b65a3f",bandAlt:"#c36649",bandText:"#fff4e8",r1:"#a8902a",r2:"#3d74ad",r3:"#8a3a22",regionText:"#fff4e8",text:"#fff4e8",muted:"#f6cbb4",grid:"#fff1d6",tick:"#f5e6c8"},
+  "Dolomiti": {page:"#0f1820",bgTop:"#34505f",bgBottom:"#1a2a35",disc:"#101c25",discText:"#eef5f8",discMuted:"#9fb4c0",profile:"#e9f1f4",profileLine:"#ffffff",accent:"#7fd6c9",band:"#3b5666",bandAlt:"#446172",bandText:"#eef5f8",r1:"#a68d2a",r2:"#5b97cf",r3:"#d86a3e",regionText:"#101c25",text:"#eef4f7",muted:"#9fb3bf",grid:"#bcd3dd",tick:"#d7e6ec"},
+  "Tricolore": {page:"#e6dccb",bgTop:"#f7f1e6",bgBottom:"#ece2cf",disc:"#1f4a35",discText:"#f7f1e6",discMuted:"#b9cdbf",profile:"#2f6b4b",profileLine:"#183d2a",accent:"#c8102e",band:"#e3d7c1",bandAlt:"#d9cbb1",bandText:"#2a2a24",r1:"#9a8420",r2:"#3f74ad",r3:"#c8432f",regionText:"#f7f1e6",text:"#23271f",muted:"#6f6a5c",grid:"#8a8270",tick:"#2f6b4b"},
+  "Cipresso": {page:"#1d2b25",bgTop:"#6a957d",bgBottom:"#2f4d42",disc:"#22352d",discText:"#e6efc8",discMuted:"#a9bf9c",profile:"#1f2e28",profileLine:"#d6e58c",accent:"#d6e58c",band:"#4b6f60",bandAlt:"#557a6a",bandText:"#e6efc8",r1:"#a68d2a",r2:"#4a86c0",r3:"#d0663a",regionText:"#1f2e28",text:"#e8f0d8",muted:"#b5c9b0",grid:"#d6e58c",tick:"#c9d79a"}
+};
+const STORE = "giro-marco-v1";
+let state = { preset:"Maglia Rosa", overrides:{}, units:"imperial", relief:"sqrt" };
+try { const s = JSON.parse(localStorage.getItem(STORE)); if (s && THEMES[s.preset]) state = Object.assign(state, s); } catch(e) {}
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e) {} };
+const theme = () => Object.assign({}, THEMES[state.preset], state.overrides);
+
+// ---------- Units & formatting ----------
+const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const MESI_L = ["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+const dIt = (s, long) => { const [y,m,d] = s.split("-").map(Number); return `${d} ${(long?MESI_L:MESI)[m-1]}`; };
+const U = () => state.units === "metric"
+  ? { d:m=>m/1000, dl:"km", e:m=>m, el:"m", spd:"km/h", tick:2, major:20, label:100, eTop:2400, eRings:[500,1000,1500,2000] }
+  : { d:m=>m/1609.344, dl:"mi", e:m=>m*3.28084, el:"ft", spd:"mph", tick:1, major:10, label:50, eTop:8000, eRings:[1000,2500,5000,7500] };
+const fmt0 = d3.format(",.0f"), fmt1 = d3.format(",.1f");
+const hm = s => `${Math.floor(s/3600)}h ${String(Math.round(s%3600/60)).padStart(2,"0")}m`;
+
+// ---------- Derived data ----------
+const TOTAL = d3.sum(RIDES, r => r.dist);
+let acc = 0;
+RIDES.forEach((r,i) => { r.idx = i+1; r.start = acc; acc += r.dist; r.end = acc; });
+const REGIONS = [];
+RIDES.forEach(r => { const last = REGIONS[REGIONS.length-1]; if (last && last.name === r.region) last.end = r.end; else REGIONS.push({name:r.region, start:r.start, end:r.end}); });
+const ang = d => d / TOTAL * 2 * Math.PI;   // 0 = top, clockwise
+
+// ---------- Geometry ----------
+const W = 1200, H = 1600, CX = 600, CY = 600;
+const R = { disc:180, regIn:184, regOut:202, base:207, top:378, lead:386, lab:392, bandIn:510, bandOut:534, tickIn:541, tickOut:553, tickMajor:561, tickLab:573 };
+const pt = (a, r) => [CX + r*Math.sin(a), CY - r*Math.cos(a)];
+const deg = a => a*180/Math.PI;
+
+function arcPath(a0, a1, r, upright = true) {
+  const mid = (a0+a1)/2, bottom = upright && Math.cos(mid) < -0.05; // reverse on lower half so text reads upright
+  const [x0,y0] = pt(bottom?a1:a0, r), [x1,y1] = pt(bottom?a0:a1, r);
+  const large = (a1-a0) > Math.PI ? 1 : 0;
+  return `M${x0},${y0} A${r},${r} 0 ${large} ${bottom?0:1} ${x1},${y1}`;
+}
+function annulus(a0, a1, r0, r1) {
+  return d3.arc()({ innerRadius:r0, outerRadius:r1, startAngle:a0, endAngle:a1 });
+}
+
+// ---------- Render ----------
+const poster = d3.select("#poster");
+let elevR;
+
+function render() {
+  const T = theme(), u = U();
+  document.documentElement.style.setProperty("--page", T.page);
+  const light = d3.hsl(T.page).l > 0.6;
+  document.documentElement.style.setProperty("--ui-text", light ? "#22231f" : "#f3eff0");
+  document.documentElement.style.setProperty("--ui-muted", light ? "#6b675c" : "#a9a4a6");
+  document.documentElement.style.setProperty("--ui-line", light ? "rgba(0,0,0,.18)" : "rgba(255,255,255,.16)");
+  document.documentElement.style.setProperty("--ui-chip", light ? "rgba(0,0,0,.05)" : "rgba(255,255,255,.06)");
+
+  poster.select("svg").remove();
+  const svg = poster.insert("svg", ".tip").attr("viewBox", `0 0 ${W} ${H}`).attr("xmlns","http://www.w3.org/2000/svg")
+    .attr("role","img").attr("aria-label","Circular elevation profile of 12 bike rides in Italy, June to July 2024");
+  const defs = svg.append("defs");
+  const g0 = defs.append("linearGradient").attr("id","bg").attr("x1",0).attr("y1",0).attr("x2",0).attr("y2",1);
+  g0.append("stop").attr("offset",0).attr("stop-color",T.bgTop);
+  g0.append("stop").attr("offset",1).attr("stop-color",T.bgBottom);
+  svg.append("rect").attr("width",W).attr("height",H).attr("fill","url(#bg)");
+
+  const eTopM = state.units === "metric" ? u.eTop : u.eTop/3.28084;
+  const sc = (state.relief === "sqrt" ? d3.scaleSqrt() : d3.scaleLinear()).domain([0, eTopM]).range([R.base, R.top]).clamp(true);
+  elevR = sc;
+
+  const zoomG = svg.append("g").attr("class","zoomable");
+  const root = zoomG.append("g");
+  const mono = "Barlow Condensed, Arial Narrow, sans-serif";
+
+  // faint backing ring for the profile zone
+  root.append("path").attr("transform",`translate(${CX},${CY})`).attr("d", annulus(0, 2*Math.PI, R.base, R.bandIn-4)).attr("fill", T.text).attr("opacity", 0.035);
+
+  // elevation rings (dashed); labels sit in a group raised above the profile
+  const ringLabels = root.append("g");
+  u.eRings.forEach(v => {
+    const r = sc(state.units === "metric" ? v : v/3.28084);
+    root.append("circle").attr("cx",CX).attr("cy",CY).attr("r",r).attr("fill","none")
+      .attr("stroke",T.grid).attr("stroke-opacity",.45).attr("stroke-width",.8).attr("stroke-dasharray","3 4").attr("vector-effect","non-scaling-stroke");
+    ringLabels.append("text").attr("x",CX-5).attr("y",CY-r-3).attr("text-anchor","end")
+      .attr("font-family",mono).attr("font-size",9.5).attr("fill",T.text).attr("letter-spacing",".04em")
+      .attr("stroke",T.bgTop).attr("stroke-width",2.6).attr("paint-order","stroke").attr("stroke-linejoin","round")
+      .text(`${fmt0(v)} ${u.el}`);
+  });
+
+  // ride separators (spokes)
+  RIDES.forEach(r => {
+    const a = ang(r.start), [x0,y0] = pt(a, R.base), [x1,y1] = pt(a, R.bandOut);
+    root.append("line").attr("x1",x0).attr("y1",y0).attr("x2",x1).attr("y2",y1)
+      .attr("stroke",T.muted).attr("stroke-opacity",.35).attr("stroke-width",.7).attr("vector-effect","non-scaling-stroke");
+  });
+
+  // elevation profiles
+  const area = d3.areaRadial().angle(d => d[0]).innerRadius(R.base).outerRadius(d => sc(Math.max(0,d[1]))).curve(d3.curveLinear);
+  const line = d3.lineRadial().angle(d => d[0]).radius(d => sc(Math.max(0,d[1]))).curve(d3.curveLinear);
+  const gp = root.append("g").attr("transform",`translate(${CX},${CY})`);
+  RIDES.forEach(r => {
+    const n = r.profile.length - 1;
+    const pts = r.profile.map((e,i) => [ang(r.start + r.dist*i/n), e]);
+    gp.append("path").attr("d", area(pts)).attr("fill", T.profile).attr("fill-opacity", .92);
+    gp.append("path").attr("d", line(pts)).attr("fill","none").attr("stroke", T.profileLine).attr("stroke-width", .9).attr("stroke-linejoin","round").attr("vector-effect","non-scaling-stroke");
+  });
+
+  ringLabels.raise();
+
+  // region band
+  REGIONS.forEach((g,i) => {
+    const a0 = ang(g.start), a1 = ang(g.end), col = T["r"+(i+1)];
+    root.append("path").attr("transform",`translate(${CX},${CY})`).attr("d", annulus(a0+0.004, a1-0.004, R.regIn, R.regOut)).attr("fill", col);
+    const id = "reg"+i;
+    defs.append("path").attr("id", id).attr("d", arcPath(a0, a1, (R.regIn+R.regOut)/2 + (Math.cos((a0+a1)/2) < -0.05 ? 3.4 : -3.4) ));
+    root.append("text").attr("font-family",mono).attr("font-weight",600).attr("font-size",10.5).attr("letter-spacing",".32em")
+      .attr("fill",T.regionText).append("textPath").attr("href","#"+id).attr("startOffset","50%").attr("text-anchor","middle")
+      .text(g.name.toUpperCase());
+  });
+
+  // center disc
+  root.append("circle").attr("cx",CX).attr("cy",CY).attr("r",R.disc).attr("fill",T.disc);
+  root.append("circle").attr("cx",CX).attr("cy",CY).attr("r",R.disc-9).attr("fill","none").attr("stroke",T.discMuted).attr("stroke-opacity",.35).attr("stroke-width",.8);
+  const flag = [["#009246",-1],["#f4f5f0",0],["#ce2b37",1]];
+  flag.forEach(([c,k]) => root.append("rect").attr("x",CX-27+(k+1)*18).attr("y",CY-108).attr("width",18).attr("height",4).attr("fill",c));
+  const serif = "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, serif";
+  root.append("text").attr("x",CX).attr("y",CY-58).attr("text-anchor","middle").attr("font-family",mono).attr("font-size",13)
+    .attr("letter-spacing",".42em").attr("fill",T.discMuted).text("GIUGNO · LUGLIO 2024");
+  root.append("text").attr("x",CX).attr("y",CY-6).attr("text-anchor","middle").attr("font-family",serif).attr("font-size",42).attr("font-weight",400)
+    .attr("fill",T.discText).text("Il Giro d’Italia");
+  root.append("text").attr("x",CX).attr("y",CY+38).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",32)
+    .attr("fill",T.discText).text("di Marco");
+  root.append("line").attr("x1",CX-40).attr("x2",CX+40).attr("y1",CY+64).attr("y2",CY+64).attr("stroke",T.discMuted).attr("stroke-opacity",.6);
+  root.append("text").attr("x",CX).attr("y",CY+90).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",13.5)
+    .attr("fill",T.discMuted).text("«Chi va piano va sano e va lontano»");
+  root.append("text").attr("x",CX).attr("y",CY+108).attr("text-anchor","middle").attr("font-family","Barlow, sans-serif").attr("font-size",10.5)
+    .attr("letter-spacing",".06em").attr("fill",T.discMuted).attr("opacity",.85).text("— whoever goes slowly goes safely, and goes far —");
+
+  // ride band
+  RIDES.forEach((r,i) => {
+    const a0 = ang(r.start), a1 = ang(r.end);
+    root.append("path").attr("transform",`translate(${CX},${CY})`).attr("d", annulus(a0+0.0025, a1-0.0025, R.bandIn, R.bandOut)).attr("fill", i%2 ? T.bandAlt : T.band);
+    const id = "ride"+i, bottom = Math.cos((a0+a1)/2) < -0.05, rm = (R.bandIn+R.bandOut)/2 + (bottom ? 4 : -4);
+    defs.append("path").attr("id", id).attr("d", arcPath(a0, a1, rm));
+    const avail = (a1-a0) * rm - 10;
+    const t = root.append("text").attr("font-family",mono).attr("font-size",12).attr("font-weight",500).attr("fill",T.bandText).attr("letter-spacing",".02em");
+    const tp = t.append("textPath").attr("href","#"+id).attr("startOffset","50%").attr("text-anchor","middle");
+    const fits = () => t.node().getComputedTextLength() <= avail;
+    let ok = false;
+    for (const o of [`${r.idx}  ·  ${r.name}  ·  ${dIt(r.date)}`, `${r.idx} · ${r.name}`]) { tp.text(o); if (fits()) { ok = true; break; } }
+    if (!ok) {
+      let nm = r.name;
+      while (nm.length > 4) { nm = nm.slice(0,-1).trimEnd(); tp.text(`${r.idx} · ${nm}…`); if (fits()) { ok = true; break; } }
+      if (!ok) tp.text(`${r.idx}`);
+    }
+  });
+
+  // distance ticks
+  const totU = u.d(TOTAL);
+  for (let v = 0; v <= totU + 1e-9; v += u.tick) {
+    const a = ang(v / u.d(1)), major = Math.round(v) % u.major === 0;
+    const [x0,y0] = pt(a, R.tickIn), [x1,y1] = pt(a, major ? R.tickMajor : R.tickOut);
+    root.append("line").attr("x1",x0).attr("y1",y0).attr("x2",x1).attr("y2",y1)
+      .attr("stroke", T.tick).attr("stroke-width", major ? 2.6 : 2.2).attr("stroke-opacity", major ? 1 : .55);
+    if (v > 0 && Math.round(v) % u.label === 0 && totU - v > u.label*0.3) {
+      const [tx,ty] = pt(a, R.tickLab);
+      const flip = Math.cos(a) < -0.05;
+      root.append("text").attr("transform",`translate(${tx},${ty}) rotate(${deg(a) + (flip?180:0)})`)
+        .attr("text-anchor","middle").attr("dy", flip ? "0.75em" : "0").attr("font-family",mono).attr("font-size",10.5).attr("fill",T.muted)
+        .text(`${v} ${u.dl}`);
+    }
+  }
+
+  // start / finish spoke
+  const [sx0,sy0] = pt(0, R.disc), [sx1,sy1] = pt(0, R.tickMajor+12);
+  root.append("line").attr("x1",sx0).attr("y1",sy0).attr("x2",sx1).attr("y2",sy1).attr("stroke",T.accent).attr("stroke-width",1.4);
+  root.append("rect").attr("x",CX-3).attr("y",sy1-6).attr("width",6).attr("height",6).attr("fill",T.accent);
+  root.append("text").attr("transform",`translate(${CX+12},${CY-R.lab}) rotate(-90)`).attr("text-anchor","start")
+    .attr("font-family",mono).attr("font-size",11).attr("fill",T.text).text(`0 ${u.dl} · partenza`);
+  root.append("text").attr("transform",`translate(${CX-4},${CY-R.lab}) rotate(-90)`).attr("text-anchor","start")
+    .attr("font-family",mono).attr("font-size",11).attr("fill",T.text).text(`${fmt1(totU)} ${u.dl} · arrivo`);
+
+  // climb & place labels with simple collision relaxation
+  const labels = [];
+  RIDES.forEach(r => r.climbs.forEach(c => labels.push({ ...c, ride:r, a: ang(r.start + r.dist*c.at) })));
+  labels.forEach(l => l.la = l.a);
+  labels.sort((p,q) => p.a - q.a);
+  const minSep = 23 / R.lab;
+  for (let it = 0; it < 60; it++) {
+    for (let i = 1; i < labels.length; i++) {
+      const d = labels[i].la - labels[i-1].la;
+      if (d < minSep) { const push = (minSep - d)/2; labels[i].la += push; labels[i-1].la -= push; }
+    }
+    labels.forEach(l => l.la = Math.max(0.07, Math.min(2*Math.PI - 0.07, l.la)));
+  }
+  labels.forEach(l => {
+    const rTop = sc(Math.max(0,l.ele));
+    const [x0,y0] = pt(l.a, rTop + 2), [x1,y1] = pt(l.a, R.lead - 3), [x2,y2] = pt(l.la, R.lab - 2);
+    root.append("path").attr("d",`M${x0},${y0} L${x1},${y1} L${x2},${y2}`).attr("fill","none")
+      .attr("stroke",T.accent).attr("stroke-width",.8).attr("stroke-opacity",.85).attr("vector-effect","non-scaling-stroke");
+    if (!l.place) {
+      // summit marker: small triangle pointing at the summit
+      const [tx,ty] = pt(l.a, rTop + 6);
+      root.append("path").attr("d", d3.symbol(d3.symbolTriangle, 22)()).attr("fill",T.accent)
+        .attr("transform",`translate(${tx},${ty}) rotate(${deg(l.a)+180})`);
+    } else {
+      const [tx,ty] = pt(l.a, rTop + 4);
+      root.append("circle").attr("cx",tx).attr("cy",ty).attr("r",2.6).attr("fill","none").attr("stroke",T.accent).attr("stroke-width",1.2);
+    }
+    const flip = l.la > Math.PI;
+    const [lx,ly] = pt(l.la, R.lab);
+    const t = root.append("text").attr("transform",`translate(${lx},${ly}) rotate(${deg(l.la) + (flip ? 90 : -90)})`)
+      .attr("text-anchor", flip ? "end" : "start").attr("font-family",mono).attr("fill",T.text);
+    t.append("tspan").attr("font-size",11).attr("font-weight",500).attr("dy","0.1em").text(l.name);
+    const sub = l.place ? "città" : `${fmt0(u.e(l.ele))} ${u.el}`;
+    t.append("tspan").attr("x",0).attr("dy","1.05em").attr("font-size",9.5).attr("fill",T.muted).text(sub);
+    const w = t.node().getBBox().width;
+    if (w > R.bandIn - R.lab - 8) t.attr("textLength", R.bandIn - R.lab - 8).attr("lengthAdjust","spacingAndGlyphs");
+  });
+
+  // ---------- Lower block ----------
+  const yb = 1238, text = (x,y,s,opt={}) => {
+    const t = root.append("text").attr("x",x).attr("y",y).attr("text-anchor",opt.anchor||"middle")
+      .attr("font-family",opt.font||mono).attr("font-size",opt.size||14).attr("fill",opt.fill||T.text);
+    if (opt.ls) t.attr("letter-spacing",opt.ls); if (opt.weight) t.attr("font-weight",opt.weight); if (opt.italic) t.attr("font-style","italic");
+    t.text(s); return t;
+  };
+  const first = RIDES[0], last = RIDES[RIDES.length-1];
+  text(CX, yb, `${dIt(first.date,true)} – ${dIt(last.date,true)} 2024`, {font:serif, size:26, italic:true});
+  const gain = d3.sum(RIDES, r => r.gain), mov = d3.sum(RIDES, r => r.moving);
+  const hi = RIDES.flatMap(r => r.climbs.filter(c=>!c.place)).reduce((p,c) => c.ele > p.ele ? c : p);
+  text(CX, yb+30, `TOTAL DISTANCE  ${fmt1(totU)} ${u.dl}     ·     ELEVATION GAIN  ${fmt0(u.e(gain))} ${u.el}`, {size:14, ls:".1em", fill:T.muted});
+  text(CX, yb+50, `MOVING TIME  ${hm(mov)}     ·     AVERAGE SPEED  ${fmt1(totU/(mov/3600))} ${u.spd}     ·     HIGH POINT  ${hi.name.toUpperCase()}  ${fmt0(u.e(hi.ele))} ${u.el}`, {size:14, ls:".1em", fill:T.muted});
+  const head = text(CX, yb+92, "MARCO  ·  12 CORSE  ·  3 REGIONI", {size:24, weight:600, ls:".08em"});
+  const hw = head.node().getComputedTextLength();
+  [yb+70, yb+101].forEach(y => root.append("line").attr("x1",CX-hw/2-8).attr("x2",CX+hw/2+8).attr("y1",y).attr("y2",y).attr("stroke",T.text).attr("stroke-width",1.4));
+
+  // ride list (3 columns × 4 rows)
+  const colW = 352, x0 = CX - colW*1.5, y0 = yb + 140;
+  RIDES.forEach((r,i) => {
+    const c = Math.floor(i/4), row = i%4, x = x0 + c*colW + 10, y = y0 + row*25;
+    const nm = r.name.length > 26 ? r.name.slice(0,25).trimEnd()+"…" : r.name;
+    text(x, y, String(r.idx).padStart(2,"0"), {anchor:"start", size:13, fill:T.accent, weight:600});
+    text(x+24, y, nm, {anchor:"start", size:13.5});
+    text(x+colW-24, y, `${dIt(r.date)}  ·  ${fmt1(u.d(r.dist))} ${u.dl}  ·  ${fmt0(u.e(r.gain))} ${u.el}`, {anchor:"end", size:12, fill:T.muted});
+  });
+
+  // legend
+  const ly = y0 + 4*25 + 26;
+  root.append("line").attr("x1",120).attr("x2",W-120).attr("y1",ly-18).attr("y2",ly-18).attr("stroke",T.muted).attr("stroke-opacity",.5);
+  root.append("line").attr("x1",120).attr("x2",W-120).attr("y1",ly+14).attr("y2",ly+14).attr("stroke",T.muted).attr("stroke-opacity",.5);
+  const items = [
+    ["ticks", `1 TICK = ${u.tick} ${u.dl.toUpperCase()}`], ["tri", "SUMMIT"], ["ring", `ELEVATION RING`],
+    ["circ", "CITY"], ["band", "RIDE"], ["region", "REGION"]];
+  const step = (W-240)/items.length;
+  items.forEach(([k,lab],i) => {
+    const x = 120 + step*i + 22, y = ly;
+    const g = root.append("g").attr("transform",`translate(${x},${y})`);
+    if (k==="ticks") [0,5,10].forEach(dx => g.append("line").attr("x1",dx).attr("x2",dx).attr("y1",-6).attr("y2",4).attr("stroke",T.tick).attr("stroke-width",2.2));
+    if (k==="tri") g.append("path").attr("d",d3.symbol(d3.symbolTriangle,30)()).attr("transform","translate(5,-1) rotate(180)").attr("fill",T.accent);
+    if (k==="ring") g.append("line").attr("x1",-4).attr("x2",14).attr("y1",-1).attr("y2",-1).attr("stroke",T.grid).attr("stroke-dasharray","3 3");
+    if (k==="circ") g.append("circle").attr("cx",5).attr("cy",-1).attr("r",3).attr("fill","none").attr("stroke",T.accent).attr("stroke-width",1.2);
+    if (k==="band") g.append("rect").attr("x",-4).attr("y",-6).attr("width",18).attr("height",10).attr("fill",T.band).attr("stroke",T.bandAlt);
+    if (k==="region") [0,1,2].forEach(j => g.append("rect").attr("x",-6+j*7).attr("y",-6).attr("width",6).attr("height",10).attr("fill",T["r"+(j+1)]));
+    g.append("text").attr("x",22).attr("y",3).attr("font-family",mono).attr("font-size",11.5).attr("letter-spacing",".08em").attr("fill",T.muted).text(lab);
+  });
+  text(CX, H-34, "Elevation profiles from GPX  ·  climbs named from Strava segments", {size:11, ls:".12em", fill:T.muted});
+
+  // ---------- Hover layer ----------
+  const hov = zoomG.append("g").style("pointer-events","none");
+  const hline = hov.append("line").attr("stroke",T.text).attr("stroke-width",1).attr("vector-effect","non-scaling-stroke").attr("opacity",0);
+  const hdot = hov.append("circle").attr("r",4).attr("fill",T.accent).attr("stroke",T.disc).attr("stroke-width",2).attr("opacity",0);
+  const tip = d3.select("#tip");
+  zoomG.append("path").attr("d", annulus(0, 2*Math.PI, R.regIn, R.bandOut)).attr("transform",`translate(${CX},${CY})`)
+    .attr("fill","transparent").style("cursor","crosshair")
+    .on("pointermove", ev => {
+      const [mx,my] = d3.pointer(ev, zoomG.node());
+      let a = Math.atan2(mx-CX, -(my-CY)); if (a < 0) a += 2*Math.PI;
+      const d = a / (2*Math.PI) * TOTAL;
+      const r = RIDES.find(q => d >= q.start && d <= q.end) || RIDES[RIDES.length-1];
+      const f = (d - r.start)/r.dist, n = r.profile.length-1, i = Math.max(0, Math.min(n, Math.round(f*n)));
+      const e = r.profile[i], rr = sc(Math.max(0,e));
+      const [x0,y0] = pt(a, R.base), [x1,y1] = pt(a, R.bandOut), [xd,yd] = pt(a, rr);
+      hline.attr("x1",x0).attr("y1",y0).attr("x2",x1).attr("y2",y1).attr("opacity",.6);
+      hdot.attr("cx",xd).attr("cy",yd).attr("r",4/zoomT.k).attr("stroke-width",2/zoomT.k).attr("opacity",1);
+      // grade over ~±150 m around the point
+      const step = r.dist/n, w = Math.max(1, Math.round(150/step));
+      const i0 = Math.max(0,i-w), i1 = Math.min(n,i+w);
+      const grade = i1 > i0 ? (r.profile[i1]-r.profile[i0]) / ((i1-i0)*step) * 100 : 0;
+      tip.html(`<b>${r.idx}. ${r.name}</b><br><span class="m">${dIt(r.date)} 2024 · ${r.town}</span><br>${fmt1(u.d(r.dist*f))} of ${fmt1(u.d(r.dist))} ${u.dl} · <b>${fmt0(u.e(e))} ${u.el}</b> · ${grade>=0?"+":"−"}${Math.abs(grade).toFixed(1)}%`);
+      const box = poster.node().getBoundingClientRect(), k = box.width / W;
+      const [sx,sy] = zoomT.apply([xd,yd]);
+      let tx = sx*k + 14, ty = sy*k - 10;
+      const tw = tip.node().offsetWidth; if (tx + tw > box.width - 6) tx = sx*k - tw - 14;
+      if (ty < 4) ty = sy*k + 16;
+      tip.style("left", tx+"px").style("top", ty+"px").style("opacity",1);
+    })
+    .on("pointerleave", () => { hline.attr("opacity",0); hdot.attr("opacity",0); tip.style("opacity",0); });
+
+  setupZoom(svg, zoomG);
+}
+
+// ---------- Zoom & pan ----------
+let zoomT = d3.zoomIdentity, zoomer = null, zoomSvg = null;
+function setupZoom(svg, zoomG) {
+  zoomSvg = svg;
+  zoomer = d3.zoom().scaleExtent([1, 10]).translateExtent([[0,0],[W,H]]).extent([[0,0],[W,H]])
+    .filter(ev => {
+      if (ev.type === "wheel") return ev.ctrlKey || ev.metaKey;            // trackpad pinch or ⌘/Ctrl + scroll
+      if (ev.type === "touchstart") return ev.touches.length > 1 || zoomT.k > 1.01; // one finger scrolls the page until zoomed
+      if (ev.type === "mousedown") return ev.button === 0 && zoomT.k > 1.01;
+      return !ev.button;
+    })
+    .wheelDelta(ev => -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.004))
+    .on("zoom", ev => {
+      zoomT = ev.transform;
+      zoomG.attr("transform", zoomT);
+      const zoomed = zoomT.k > 1.01;
+      svg.style("touch-action", zoomed ? "none" : "pan-x pan-y").style("cursor", zoomed ? "grab" : null);
+      d3.select("#zlevel").text(`${Math.round(zoomT.k*100)}%`);
+      d3.select("#zreset").property("disabled", !zoomed);
+      d3.select("#tip").style("opacity",0);
+    });
+  svg.call(zoomer).call(zoomer.transform, zoomT);
+  svg.on("dblclick.zoom", null).on("dblclick", ev => {
+    const p = d3.pointer(ev, svg.node());
+    svg.transition().duration(350).call(zoomer.scaleBy, ev.shiftKey ? 0.5 : 2, p);
+  });
+}
+const zoomBy = f => zoomSvg && zoomSvg.transition().duration(300).call(zoomer.scaleBy, f);
+
+
+// ---------- Controls ----------
+const themesEl = d3.select("#themes");
+Object.entries(THEMES).forEach(([name,t]) => {
+  const b = themesEl.append("button").attr("data-theme",name);
+  const sw = b.append("span").attr("class","swatch");
+  [t.bgTop,t.profile,t.accent].forEach(c => sw.append("i").style("background",c));
+  b.append("span").text(name);
+  b.on("click", () => { state.preset = name; state.overrides = {}; save(); sync(); render(); });
+});
+d3.selectAll("[data-units]").on("click", function(){ state.units = this.dataset.units; save(); sync(); render(); });
+d3.selectAll("[data-relief]").on("click", function(){ state.relief = this.dataset.relief; save(); sync(); render(); });
+const pickers = d3.select("#pickers");
+TOKENS.forEach(([k,lab]) => {
+  const l = pickers.append("label");
+  l.append("input").attr("type","color").attr("data-token",k).on("input", function(){ state.overrides[k] = this.value; save(); render(); });
+  l.append("span").text(lab);
+});
+const status = m => { d3.select("#status").text(m); setTimeout(() => d3.select("#status").text(""), 2600); };
+d3.select("#resetTheme").on("click", () => { state.overrides = {}; save(); sync(); render(); status("Reset to " + state.preset); });
+d3.select("#copyTheme").on("click", async () => {
+  try { await navigator.clipboard.writeText(JSON.stringify(theme(), null, 1)); status("Theme copied"); } catch(e) { status("Clipboard not available here"); }
+});
+d3.select("#pasteTheme").on("click", () => {
+  const box = d3.select(".actions").selectAll("textarea").data([0]).join("textarea")
+    .attr("rows",4).style("width","100%").attr("placeholder","Paste theme JSON here, then click away");
+  box.node().focus();
+  box.on("change", function(){
+    try { const o = JSON.parse(this.value); const valid = {};
+      TOKENS.forEach(([k]) => { if (/^#[0-9a-f]{6}$/i.test(o[k]||"")) valid[k] = o[k]; });
+      state.overrides = valid; save(); sync(); render(); status(`Applied ${Object.keys(valid).length} colors`); this.remove();
+    } catch(e) { status("That isn't valid theme JSON"); }
+  });
+});
+const svgString = () => {
+  const n = poster.select("svg").node().cloneNode(true);
+  n.setAttribute("width", W); n.setAttribute("height", H);
+  const zg = n.querySelector(".zoomable"); if (zg) zg.removeAttribute("transform");
+  n.removeAttribute("style");
+  return '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(n);
+};
+d3.select("#copySvg").on("click", async () => {
+  try { await navigator.clipboard.writeText(svgString()); status("SVG copied — paste into a .svg file or Illustrator/Figma"); } catch(e) { status("Clipboard not available here"); }
+});
+d3.select("#saveImg").on("click", () => {
+  const img = new Image(), url = URL.createObjectURL(new Blob([svgString()], {type:"image/svg+xml"}));
+  img.onload = () => {
+    const c = document.createElement("canvas"); c.width = W*2; c.height = H*2;
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    try { d3.select("#ovImg").attr("src", c.toDataURL("image/png")); } catch(e) { d3.select("#ovImg").attr("src", url); }
+    d3.select("#overlay").classed("on", true);
+  };
+  img.src = url;
+});
+d3.select("#zin").on("click", () => zoomBy(1.6));
+d3.select("#zout").on("click", () => zoomBy(1/1.6));
+d3.select("#zreset").on("click", () => zoomSvg && zoomSvg.transition().duration(400).call(zoomer.transform, d3.zoomIdentity));
+d3.select("#overlay").on("click", ev => { if (ev.target.id !== "ovImg") d3.select("#overlay").classed("on", false); });
+
+function sync() {
+  d3.selectAll("[data-theme]").attr("aria-pressed", function(){ return this.dataset.theme === state.preset; });
+  d3.selectAll("[data-units]").attr("aria-pressed", function(){ return this.dataset.units === state.units; });
+  d3.selectAll("[data-relief]").attr("aria-pressed", function(){ return this.dataset.relief === state.relief; });
+  const T = theme(); d3.selectAll("[data-token]").property("value", function(){ return T[this.dataset.token]; });
+}
+sync();
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(render);
+</script>
+</body>
+</html>

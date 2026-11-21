@@ -1,3 +1,7 @@
 __pycache__/
 .DS_Store
 gpx/
+# Strava API: app secrets, OAuth tokens, and fetched data (streams hold full GPS tracks)
+.env
+.strava_tokens.json
+data/strava/

@@ -6,3 +6,5 @@ gpx/
 .strava_tokens.json
 data/strava/
 dist/
+# Wrangler (Cloudflare) local cache
+.wrangler/

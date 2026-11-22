@@ -1,0 +1,102 @@
+{
+  "title": "Dieci Anni en Toscana",
+  "summary": "10 year anniversary rides through the Tuscan countryside. June 2017.",
+  "lang": "it",
+  "storageKey": "poster-dieci-anni-en-toscana-2017-v1",
+  "ariaLabel": "Circular elevation profile of 6 bike rides: Dieci Anni en Toscana",
+  "disc": {
+    "kicker": "GIUGNO 2017",
+    "title": "Dieci Anni en Toscana",
+    "subtitle": "",
+    "quote": []
+  },
+  "flag": [
+    "#009246",
+    "#f4f5f0",
+    "#ce2b37"
+  ],
+  "headline": "RACHELE e MARCO  ·  {rides} CORSE en {regions}",
+  "elevation": {
+    "minM": 0,
+    "topFt": 2700,
+    "topM": 800,
+    "ringsFt": [
+      1000,
+      2000
+    ],
+    "ringsM": [
+      250,
+      500,
+      750
+    ]
+  },
+  "defaultTheme": "Maglia Rosa",
+  "defaultRelief": "linear",
+  "themes": {
+    "Maglia Rosa": {
+      "page": "#18171c",
+      "bgTop": "#34303b",
+      "bgBottom": "#1f1c24",
+      "disc": "#16141a",
+      "discText": "#fbe9ef",
+      "discMuted": "#b9a5ae",
+      "profile": "#f2a3bd",
+      "profileLine": "#ffe1ea",
+      "accent": "#ff7aa2",
+      "band": "#3f3946",
+      "bandAlt": "#4a4352",
+      "bandText": "#f3e6eb",
+      "r1": "#a68d2a",
+      "r2": "#4f8fca",
+      "r3": "#de6a3a",
+      "regionText": "#16141a",
+      "text": "#f6eef1",
+      "muted": "#a7979f",
+      "grid": "#f2a3bd",
+      "tick": "#f2a3bd"
+    },
+    "Tricolore": {
+      "page": "#e6dccb",
+      "bgTop": "#f7f1e6",
+      "bgBottom": "#ece2cf",
+      "disc": "#1f4a35",
+      "discText": "#f7f1e6",
+      "discMuted": "#b9cdbf",
+      "profile": "#2f6b4b",
+      "profileLine": "#183d2a",
+      "accent": "#c8102e",
+      "band": "#e3d7c1",
+      "bandAlt": "#d9cbb1",
+      "bandText": "#2a2a24",
+      "r1": "#9a8420",
+      "r2": "#3f74ad",
+      "r3": "#c8432f",
+      "regionText": "#f7f1e6",
+      "text": "#23271f",
+      "muted": "#6f6a5c",
+      "grid": "#8a8270",
+      "tick": "#2f6b4b"
+    },
+    "Turquesa": {
+      "page": "#0d1d20",
+      "bgTop": "#1f4a4f",
+      "bgBottom": "#12292d",
+      "disc": "#0e2023",
+      "discText": "#eef6f2",
+      "discMuted": "#9cc1bb",
+      "profile": "#46bfb0",
+      "profileLine": "#c9f2ea",
+      "accent": "#f2b84b",
+      "band": "#2a5a5f",
+      "bandAlt": "#33666b",
+      "bandText": "#eef6f2",
+      "r1": "#b2472f",
+      "regionText": "#f6efe9",
+      "text": "#eef5f2",
+      "muted": "#9dbcb7",
+      "grid": "#7fd3c6",
+      "tick": "#7fd3c6",
+      "r2": "#a68d2a"
+    }
+  }
+}

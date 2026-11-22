@@ -1,0 +1,53 @@
+{
+  "tz": "Europe/Rome",
+  "stripName": null,
+  "rides": [
+    {"id": 1031766982, "region": "Toscana - Val d'Orcia",
+     "climbs": [
+      {"label": "Cronometro Pienza 2017", "segment": "Cronometro Pienza 2017", "range": [1139,2041]},
+      {"label": "San Quirico da Pienza", "segment": "San Quirico da Pienza", "range": [2849,3430]},
+      {"label": "Salitella finale S.Quirico da Pienza", "segment": "Salitella finale S.Quirico da Pienza", "range": [3355,3605]}
+     ]},
+    {"id": 1033154714, "region": "Toscana - Val d'Orcia",
+     "climbs": [
+      {"label": "Ss323 Climb", "segment": "Ss323 Climb", "range": [1079,2092]},
+      {"label": "Pian di Maggio-Monticchiello", "segment": "Pian di Maggio-Monticchiello", "range": [11746,13022]},
+      {"label": "Castelnuovo dell'Abate (from Monte Amiata Scalo)", "segment": "Castelnuovo dell'Abate (from Monte Amiata Scalo)", "range": [3910,4639]},
+      {"label": "La Croce", "segment": "La Croce", "range": [6224,7442]},
+      {"label": "Finale Tòma", "segment": "Finale Tòma", "range": [9676,10206]},
+      {"label": "BELLARIA da Torenieri", "segment": "BELLARIA da Torenieri", "range": [8813,9130]}
+     ]},
+    {"id": 1034643773, "region": "Toscana - Val d'Orcia",
+     "climbs": [
+      {"label": "Castel Muzio-Petroio-Madonnino", "segment": "Castel Muzio-Petroio-Madonnino", "range": [2232,3570]},
+      {"label": "Castelmuzio - SP71", "segment": "Castelmuzio - SP71", "range": [2230,2621]},
+      {"label": "Salita Vernine", "segment": "Salita Vernine ", "range": [6935,7326]},
+      {"label": "curve di Pienza UP", "segment": "curve di Pienza UP", "range": [917,1260]},
+      {"label": "Via Della Martinella Climb", "segment": "Via Della Martinella Climb", "range": [7540,7832]},
+      {"label": "Trequanda-Collalto Climb", "segment": "Trequanda-Collalto Climb", "range": [8839,9419]}
+     ]},
+    {"id": 1036188685, "region": "Toscana - Chianti",
+     "climbs": [
+      {"label": "Collalto", "segment": "Collalto", "range": [348,1426]},
+      {"label": "Asciano-Vescona (prima salita)", "segment": "Asciano-Vescona (prima salita)", "range": [3587,4080]},
+      {"label": "Strada Comunale Di Poggio Al Vento Climb", "segment": "Strada Comunale Di Poggio Al Vento Climb", "range": [3582,3942]},
+      {"label": "Sp484 Climb", "segment": "Sp484 Climb", "range": [11178,11612]},
+      {"label": "CASTELNUOVO Berardenga da Fosso della Malena", "segment": "CASTELNUOVO Berardenga da Fosso della Malena", "range": [8861,9480]},
+      {"label": "Sp62 Climb", "segment": "Sp62 Climb", "range": [8253,8540]}
+     ]},
+    {"id": 1037904477, "region": "Toscana - Chianti",
+     "climbs": [
+      {"label": "Volpaia", "segment": "Volpaia", "range": [5203,6042]},
+      {"label": "Super Lecchi", "segment": "Super Lecchi", "range": [1880,2893]},
+      {"label": "CASTAGNOLI da Meleto", "segment": "CASTAGNOLI da Meleto", "range": [314,1038]},
+      {"label": "La Croce to centre Radda", "segment": "La Croce to centre Radda", "range": [3680,4277]},
+      {"label": "Località to Lecchi", "segment": "Località to Lecchi", "range": [1878,2383]},
+      {"label": "Croce", "segment": "Croce", "range": [3669,4118]}
+     ]},
+    {"id": 1038958062, "region": "Toscana - Chianti",
+     "climbs": [
+      {"label": "Super Badia Coltibuono", "segment": "Super Badia Coltibuono", "range": [371,2245]},
+      {"label": "Collina Gelato..", "segment": "Collina Gelato..", "range": [3049,3176]}
+     ]}
+  ]
+}

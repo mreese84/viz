@@ -4,6 +4,7 @@ A gallery of single-page D3 posters, one per cycling trip: each trip drawn as a 
 
 - `italy-2024`: Il Giro d’Italia di Marco, 12 rides in Italy (June–July 2024). Italian flavour text.
 - `new-mexico-2018`: La Vuelta a Nuevo México, 3 rides out of Albuquerque (September 2018). Spanish flavour text.
+- `dieci-anni-in-toscana-2017`: Dieci Anni in Toscana, 6 rides in Tuscany (June 2017), made with the Add poster page. Italian flavour text.
 
 ## Build
 

@@ -6,6 +6,7 @@ An experiment in turning cycling data into bespoke artwork: each trip drawn as o
 
 - [Il Giro d’Italia di Marco](https://mreese84.github.io/viz/italy-2024/): 12 rides in Italy, June–July 2024 (Abruzzo, Trentino-Alto Adige, Toscana).
 - [La Vuelta a Nuevo México](https://mreese84.github.io/viz/new-mexico-2018/): 3 rides out of Albuquerque, September 2018.
+- [Dieci Anni in Toscana](https://mreese84.github.io/viz/dieci-anni-in-toscana-2017/): 6 rides in Tuscany, June 2017.
 
 ```
 python3 scripts/assemble.py

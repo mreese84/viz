@@ -2,5 +2,5 @@
   "repo": "mreese84/viz",
   "branch": "main",
   "siteUrl": "https://mreese84.github.io/viz/",
-  "stravaWorker": ""
+  "stravaWorker": "https://viz-strava-auth.stravaviz.workers.dev"
 }

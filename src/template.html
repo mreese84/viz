@@ -262,20 +262,38 @@ function render() {
   root.append("circle").attr("cx",CX).attr("cy",CY).attr("r",R.disc).attr("fill",T.disc);
   root.append("circle").attr("cx",CX).attr("cy",CY).attr("r",R.disc-9).attr("fill","none").attr("stroke",T.discMuted).attr("stroke-opacity",.35).attr("stroke-width",.8);
   const D = POSTER.disc, Q = D.quote || [], dy = 8.5 * (3 - Q.length);   // keep the block centred for fewer quote lines
-  (POSTER.flag || []).forEach((c,k,a) => root.append("rect").attr("x",CX-a.length*9+k*18).attr("y",CY-124+dy).attr("width",18).attr("height",4).attr("fill",c));
   const serif = "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, serif";
-  root.append("text").attr("x",CX).attr("y",CY-76+dy).attr("text-anchor","middle").attr("font-family",mono).attr("font-size",13)
+  // Disc title: one line at 42px if it fits the disc, otherwise two balanced lines at 38px (split at the word break
+  // that makes the longer line shortest), shrunk further only if a line still doesn't fit. A missing subtitle
+  // gives its slot back. The block re-centres; with a one-line title and a subtitle nothing moves.
+  const TITLE_MAX = 308;   // usable width across the disc at the title's height
+  const textW = (s, size) => { const t = root.append("text").attr("font-family",serif).attr("font-size",size).text(s); const w = t.node().getComputedTextLength(); t.remove(); return w; };
+  let tLines = [D.title], tSize = 42;
+  if (textW(D.title, 42) > TITLE_MAX) {
+    const words = D.title.trim().split(/\s+/);
+    if (words.length > 1) {
+      tSize = 38;
+      tLines = words.slice(1).map((_, i) => [words.slice(0, i+1).join(" "), words.slice(i+1).join(" ")])
+        .reduce((best, l) => Math.max(...l.map(s => textW(s, tSize))) < Math.max(...best.map(s => textW(s, tSize))) ? l : best);
+    }
+    const widest = Math.max(...tLines.map(s => textW(s, tSize)));
+    if (widest > TITLE_MAX) tSize = Math.max(16, tSize * TITLE_MAX / widest);
+  }
+  const extraTitle = (tLines.length - 1) * 38, subGap = D.subtitle ? 0 : -42;
+  const top = -(extraTitle + subGap) / 2, below = top + extraTitle + subGap;
+  (POSTER.flag || []).forEach((c,k,a) => root.append("rect").attr("x",CX-a.length*9+k*18).attr("y",CY-124+dy+top).attr("width",18).attr("height",4).attr("fill",c));
+  root.append("text").attr("x",CX).attr("y",CY-76+dy+top).attr("text-anchor","middle").attr("font-family",mono).attr("font-size",13)
     .attr("letter-spacing",".42em").attr("fill",T.discMuted).text(D.kicker);
-  root.append("text").attr("x",CX).attr("y",CY-24+dy).attr("text-anchor","middle").attr("font-family",serif).attr("font-size",42).attr("font-weight",400)
-    .attr("fill",T.discText).text(D.title);
-  root.append("text").attr("x",CX).attr("y",CY+18+dy).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",32)
+  tLines.forEach((s, i) => root.append("text").attr("x",CX).attr("y",CY-24+dy+top+i*38).attr("text-anchor","middle").attr("font-family",serif).attr("font-size",tSize).attr("font-weight",400)
+    .attr("fill",T.discText).text(s));
+  if (D.subtitle) root.append("text").attr("x",CX).attr("y",CY+18+dy+top+extraTitle).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",32)
     .attr("fill",T.discText).text(D.subtitle);
-  root.append("line").attr("x1",CX-40).attr("x2",CX+40).attr("y1",CY+42+dy).attr("y2",CY+42+dy).attr("stroke",T.discMuted).attr("stroke-opacity",.6);
+  root.append("line").attr("x1",CX-40).attr("x2",CX+40).attr("y1",CY+42+dy+below).attr("y2",CY+42+dy+below).attr("stroke",T.discMuted).attr("stroke-opacity",.6);
   // quote, hand-broken in the config to fit the disc
   Q.forEach((s,i) =>
-    root.append("text").attr("x",CX).attr("y",CY+68+i*17+dy).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",13)
+    root.append("text").attr("x",CX).attr("y",CY+68+i*17+dy+below).attr("text-anchor","middle").attr("font-family",serif).attr("font-style","italic").attr("font-size",13)
       .attr("fill",T.discMuted).text(s));
-  if (D.cite) root.append("text").attr("x",CX).attr("y",CY+68+(Q.length-1)*17+24+dy).attr("text-anchor","middle").attr("font-family",mono).attr("font-size",10.5)
+  if (D.cite) root.append("text").attr("x",CX).attr("y",CY+68+(Q.length-1)*17+24+dy+below).attr("text-anchor","middle").attr("font-family",mono).attr("font-size",10.5)
     .attr("letter-spacing",".22em").attr("fill",T.discMuted).text(D.cite);
 
   // ride band; a title that doesn't fit even at a smaller size moves to an outer label beyond the distance ticks

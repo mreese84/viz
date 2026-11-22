@@ -59,7 +59,7 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 
 - `title`, `summary` (gallery card), `ariaLabel`, `storageKey` (localStorage key for theme/units/relief; keep it stable once published).
 - `lang`: flavour language for the poster — `it`, `es` or `en` (`LOCALES` in the template: month names, date range, start/finish words, default place caption). UI and stats labels stay English everywhere.
-- `disc`: centre-disc text — `kicker`, `title`, `subtitle`, `quote` (1–3 hand-broken lines; the block re-centres), `cite`. `flag`: stripe colours above the kicker.
+- `disc`: centre-disc text — `kicker`, `title` (wraps onto two balanced lines, then shrinks, if too wide for the disc), `subtitle` (optional; empty gives its space back), `quote` (0–3 hand-broken lines), `cite`. The block re-centres. `flag`: stripe colours above the kicker.
 - `headline`: the boxed line under the stats; `{rides}` and `{regions}` are replaced with counts.
 - `elevation`: `minM` = elevation at the profile base (0 for Italy; just under the trip's low point for high-altitude trips), `topFt`/`topM` = the outer edge, `ringsFt`/`ringsM` = dashed rings. `defaultRelief`: `sqrt` (Enhanced) or `linear` (True scale).
 - `themes` (presets with the 20 colour tokens; `r1…rN` = one per region in order of appearance) and `defaultTheme`.

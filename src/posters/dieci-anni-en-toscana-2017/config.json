@@ -1,13 +1,13 @@
 {
-  "title": "Dieci Anni en Toscana",
+  "title": "Dieci Anni in Toscana",
   "summary": "10 year anniversary rides through the Tuscan countryside. June 2017.",
   "lang": "it",
   "storageKey": "poster-dieci-anni-en-toscana-2017-v1",
-  "ariaLabel": "Circular elevation profile of 6 bike rides: Dieci Anni en Toscana",
+  "ariaLabel": "Circular elevation profile of 6 bike rides: Dieci Anni in Toscana",
   "disc": {
     "kicker": "GIUGNO 2017",
-    "title": "Dieci Anni en Toscana",
-    "subtitle": "",
+    "title": "Dieci Anni",
+    "subtitle": "in Toscana",
     "quote": []
   },
   "flag": [
@@ -15,7 +15,7 @@
     "#f4f5f0",
     "#ce2b37"
   ],
-  "headline": "RACHELE e MARCO  ·  {rides} CORSE en {regions}",
+  "headline": "RACHELE e MARCO  ·  {rides} CORSE in {regions} REGIONI",
   "elevation": {
     "minM": 0,
     "topFt": 2700,

@@ -15,7 +15,6 @@
   "headline": "MARCO  ·  {rides} ETAPAS  ·  TIERRA DEL ENCANTO",
   "elevation": { "minM": 1500, "topFt": 10500, "topM": 3200, "ringsFt": [6000, 8000, 10000], "ringsM": [2000, 2500, 3000] },
   "defaultTheme": "Adobe",
-  "defaultRelief": "linear",
   "themes": {
     "Sandía": {"page":"#171a17","bgTop":"#2e3a30","bgBottom":"#1a211b","disc":"#141914","discText":"#f6e9ec","discMuted":"#b6a6aa","profile":"#ef7d92","profileLine":"#ffd5dd","accent":"#9be08a","band":"#3a4a3c","bandAlt":"#445646","bandText":"#f0e8ea","r1":"#4f9a5a","regionText":"#141914","text":"#f3eef0","muted":"#a9b3aa","grid":"#ef7d92","tick":"#ef7d92"},
     "Turquesa": {"page":"#0d1d20","bgTop":"#1f4a4f","bgBottom":"#12292d","disc":"#0e2023","discText":"#eef6f2","discMuted":"#9cc1bb","profile":"#46bfb0","profileLine":"#c9f2ea","accent":"#f2b84b","band":"#2a5a5f","bandAlt":"#33666b","bandText":"#eef6f2","r1":"#b2472f","regionText":"#f6efe9","text":"#eef5f2","muted":"#9dbcb7","grid":"#7fd3c6","tick":"#7fd3c6"},

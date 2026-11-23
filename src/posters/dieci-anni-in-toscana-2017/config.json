@@ -31,7 +31,6 @@
     ]
   },
   "defaultTheme": "Maglia Rosa",
-  "defaultRelief": "linear",
   "themes": {
     "Maglia Rosa": {
       "page": "#18171c",

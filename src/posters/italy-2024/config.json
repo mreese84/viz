@@ -15,7 +15,6 @@
   "headline": "MARCO  ·  {rides} CORSE  ·  {regions} REGIONI",
   "elevation": { "minM": 0, "topFt": 8000, "topM": 2400, "ringsFt": [1000, 2500, 5000, 7500], "ringsM": [500, 1000, 1500, 2000] },
   "defaultTheme": "Maglia Rosa",
-  "defaultRelief": "sqrt",
   "themes": {
     "Maglia Rosa": {"page":"#18171c","bgTop":"#34303b","bgBottom":"#1f1c24","disc":"#16141a","discText":"#fbe9ef","discMuted":"#b9a5ae","profile":"#f2a3bd","profileLine":"#ffe1ea","accent":"#ff7aa2","band":"#3f3946","bandAlt":"#4a4352","bandText":"#f3e6eb","r1":"#a68d2a","r2":"#4f8fca","r3":"#de6a3a","regionText":"#16141a","text":"#f6eef1","muted":"#a7979f","grid":"#f2a3bd","tick":"#f2a3bd"},
     "Dolomiti": {"page":"#0f1820","bgTop":"#34505f","bgBottom":"#1a2a35","disc":"#101c25","discText":"#eef5f8","discMuted":"#9fb4c0","profile":"#e9f1f4","profileLine":"#ffffff","accent":"#7fd6c9","band":"#3b5666","bandAlt":"#446172","bandText":"#eef5f8","r1":"#a68d2a","r2":"#5b97cf","r3":"#d86a3e","regionText":"#101c25","text":"#eef4f7","muted":"#9fb3bf","grid":"#bcd3dd","tick":"#d7e6ec"},

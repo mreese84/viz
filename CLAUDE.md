@@ -53,16 +53,16 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 - `scripts/strava_data.py` — reading fetched data, segment-name matching, climb suggestions (shared by build and suggest).
 - `scripts/suggest_climbs.py` — uphill efforts (grade ≥ 2%, ≥ 20 m gain) ranked by climb category then gain; pieces of one climb merged (overlapping efforts where one lies inside the other, or whose tops are within 500 m along the ride); top 5 printed as rides.json entries (`--all` for every one).
 - `scripts/build_data.py` — builds `rides_data.js` from Strava streams or GPX (see Build), placing summit and place labels.
-- `scripts/assemble.py` — writes `dist/` from scratch (it deletes the old one): `dist/<poster>/index.html` per poster, `dist/index.html`, and `dist/new/` (the Add poster page plus `site.json`, the raw poster template and `presets.json`: every poster's themes and the addresses already taken). Gallery thumbnails are radial silhouettes drawn in Python from each poster's data, in its default theme and relief, so they never go stale.
+- `scripts/assemble.py` — writes `dist/` from scratch (it deletes the old one): `dist/<poster>/index.html` per poster, `dist/index.html`, and `dist/new/` (the Add poster page plus `site.json`, the raw poster template and `presets.json`: every poster's themes and the addresses already taken). Gallery thumbnails are radial silhouettes drawn in Python from each poster's data, in its default theme and true scale, so they never go stale.
 - `dist/` — built output, git-ignored; CI builds it and GitHub Pages serves it.
 
 ## Poster config (src/posters/<poster>/config.json)
 
-- `title`, `summary` (gallery card), `ariaLabel`, `storageKey` (localStorage key for theme/units/relief; keep it stable once published).
+- `title`, `summary` (gallery card), `ariaLabel`, `storageKey` (localStorage key for theme/units; keep it stable once published).
 - `lang`: flavour language for the poster — `it`, `es` or `en` (`LOCALES` in the template: month names, date range, start/finish words, default place caption). UI and stats labels stay English everywhere.
 - `disc`: centre-disc text — `kicker`, `title` (wraps onto two balanced lines, then shrinks, if too wide for the disc), `subtitle` (optional; empty gives its space back), `quote` (0–3 hand-broken lines), `cite`. The block re-centres. `flag`: stripe colours above the kicker.
 - `headline`: the boxed line under the stats; `{rides}` and `{regions}` are replaced with counts.
-- `elevation`: `minM` = elevation at the profile base (0 for Italy; just under the trip's low point for high-altitude trips), `topFt`/`topM` = the outer edge, `ringsFt`/`ringsM` = dashed rings. `defaultRelief`: `sqrt` (Enhanced) or `linear` (True scale).
+- `elevation`: `minM` = elevation at the profile base (0 for Italy; just under the trip's low point for high-altitude trips), `topFt`/`topM` = the outer edge, `ringsFt`/`ringsM` = dashed rings. Elevation is always drawn to true scale (no exaggeration option).
 - `themes` (presets with the 20 colour tokens; `r1…rN` = one per region in order of appearance) and `defaultTheme`.
 
 ## Ride inputs (src/posters/<poster>/rides.json)
@@ -79,10 +79,10 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 ## Page internals (src/template.html)
 
 - SVG viewBox 1200×H (H = 1600 for 4 rows of the ride list, shorter for fewer), centre (600,600). Radii in the `R` object; angle 0 = top, clockwise, proportional to cumulative distance (`ang()`).
-- `TOKENS` (20 colour slots, region slots named from the data). Users override per token; state persists in localStorage under the poster's `storageKey`. A saved theme that no longer exists falls back to the default theme, keeping units and relief.
-- `render()` rebuilds the whole SVG on any change (theme, units, relief). Colours are written as attributes, not CSS vars, so SVG/PNG export keeps them.
+- `TOKENS` (20 colour slots, region slots named from the data). Users override per token; state persists in localStorage under the poster's `storageKey`. A saved theme that no longer exists falls back to the default theme, keeping units.
+- `render()` rebuilds the whole SVG on any change (theme, units). Colours are written as attributes, not CSS vars, so SVG/PNG export keeps them.
 - Fonts are loaded explicitly (`FACES`, `document.fonts.load`) before the first `render()`, because label fitting measures text; `document.fonts.ready` alone can resolve before an unused weight is fetched, which made titles measure too wide.
-- Elevation scale: `sc(v)` maps height above `elevation.minM` to radius (square root for Enhanced, linear for True scale).
+- Elevation scale: `sc(v)` maps height above `elevation.minM` to radius linearly (true scale; the Enhanced square-root option was removed).
 - Each ride has a backing wedge in the profile zone, alternating between two opacities of the `text` colour so neighbouring rides read apart in every theme.
 - Region band: one segment per run of rides with the same region; a single region becomes a full ring labelled at the bottom. Italy's region colours (r1–r3) were checked with a colour-vision validator (adjacent-pair ΔE ≥ 15 normal vision, ≥ 8 under CVD simulation). Keep adjacent regions separated if you change them; region names are printed on the band as secondary encoding.
 - Zoom: d3.zoom on `.zoomable`, scale 1–10. Wheel zoom only with Ctrl/⌘ (trackpad pinch), one-finger touch scrolls the page until zoomed. Fine lines use `vector-effect: non-scaling-stroke`. Export strips the zoom transform.
@@ -94,7 +94,7 @@ GitHub Pages, via `.github/workflows/pages.yml`: https://mreese84.github.io/viz/
 
 ## Add poster page (src/new/, served at /new/)
 
-For the site owner. Flow: Strava links → Strava login (through the Worker) → fetch activity + streams per ride, sorted by start time → prompts: poster text (pre-filled from the dates in the chosen language), region (required) and town per ride, climb labels (ranked suggestions, top 3 ticked, editable; optional label at the ride's highest point = range `[0, null]`), themes (from `presets.json`), flag stripes, elevation scale (base 0 + Enhanced if the low point is under 400 m, otherwise just under it + True scale) → preview (the real template in an iframe) → publish.
+For the site owner. Flow: Strava links → Strava login (through the Worker) → fetch activity + streams per ride, sorted by start time → prompts: poster text (pre-filled from the dates in the chosen language), region (required) and town per ride, climb labels (ranked suggestions, top 3 ticked, editable; optional label at the ride's highest point = range `[0, null]`), themes (from `presets.json`), flag stripes, elevation scale (base 0 if the low point is under 400 m, otherwise just under it) → preview (the real template in an iframe) → publish.
 
 - Publishing makes one commit to `main` via the GitHub git-data API (ref → commit → tree → commit → ref update, retried once if `main` moved) adding `src/posters/<slug>/config.json`, `rides.json` and `rides_data.js`. CI then builds and deploys. It refuses an address that already exists. If `main` is ever protected by a pull-request rule, this direct commit will be refused.
 - Tokens stay in the browser: Strava tokens in `localStorage` (`viz-strava-tokens`, refreshed through the Worker), the GitHub fine-grained token (Contents: read and write on this repo only) in `viz-github-token` if "remember" is ticked. The draft form lives in `sessionStorage` so it survives the Strava login redirect.

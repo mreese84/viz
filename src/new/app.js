@@ -259,12 +259,11 @@ function initLook() {
   }
   const flag = $("f-flag");
   if (flag.options.length === 1) for (const n of Object.keys(FLAGS)) flag.append(el("option", { value: n }, n));
-  // elevation scale from the data: base 0 for low terrain (Enhanced relief), otherwise just under the low point (True scale)
+  // elevation scale from the data: base 0 for low terrain, otherwise just under the low point
   const lo = Math.min(...RIDES.map(r => r.base.minEle)), hi = Math.max(...RIDES.map(r => r.base.maxEle));
   const minM = lo < 400 ? 0 : Math.floor((lo - 100) / 100) * 100;
   const topM = Math.ceil((hi + 50) / 100) * 100;
   $("f-emin").value = minM; $("f-etop").value = topM; $("f-etopft").value = Math.ceil(topM * 3.28084 / 100) * 100;
-  $("f-relief").value = minM === 0 ? "sqrt" : "linear";
   $("elev-hint").textContent = `Your rides go from ${Math.round(lo).toLocaleString()} m to ${Math.round(hi).toLocaleString()} m (${Math.round(lo * 3.28084).toLocaleString()}–${Math.round(hi * 3.28084).toLocaleString()} ft).`;
   $("f-etop").addEventListener("input", () => { $("f-etopft").value = Math.ceil($("f-etop").value * 3.28084 / 100) * 100; });
 }
@@ -316,7 +315,7 @@ function collect() {
     ariaLabel: `Circular elevation profile of ${RIDES.length} bike ride${RIDES.length > 1 ? "s" : ""}: ${title}`,
     disc, flag: FLAGS[$("f-flag").value] || [], headline: $("f-headline").value.trim() || "{rides} RIDES",
     elevation: { minM, topFt, topM, ringsFt: rings(minM * 3.28084, topFt, [500, 1000, 2000, 2500, 5000]), ringsM: rings(minM, topM, [250, 500, 1000]) },
-    defaultTheme: themes.includes(def) ? def : themes[0], defaultRelief: $("f-relief").value, themes: themeMap,
+    defaultTheme: themes.includes(def) ? def : themes[0], themes: themeMap,
   };
   const stripRe = strip ? new RegExp(strip) : null;
   const rides = RIDES.map((r, i) => rideEntry(ridesJson.rides[i], r.act.name, r.pts, tz, stripRe, r.act));

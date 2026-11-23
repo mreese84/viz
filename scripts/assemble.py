@@ -28,13 +28,12 @@ def date_range(d0, d1):
     return f"{MONTHS[m0-1]} {a} – {MONTHS[m1-1]} {b}, {y1}"
 
 def silhouette(cfg, rides, size=400):
-    """Small radial elevation profile in the poster's default theme, same geometry and relief scale as the poster."""
+    """Small radial elevation profile in the poster's default theme, same geometry and (true) scale as the poster."""
     T, E = cfg["themes"][cfg["defaultTheme"]], cfg["elevation"]
     c, disc, base, top = size/2, size*0.18, size*0.21, size*0.46
     total = sum(r["dist"] for r in rides)
-    span = E["topFt"]/3.28084 - E["minM"]   # the poster's default scale (imperial, default relief)
-    shape = math.sqrt if cfg.get("defaultRelief", "sqrt") == "sqrt" else (lambda x: x)
-    sc = lambda e: base + (top-base)*shape(min(1, max(0, (e - E["minM"]) / span)))
+    span = E["topFt"]/3.28084 - E["minM"]   # the poster's default (imperial) scale
+    sc = lambda e: base + (top-base)*min(1, max(0, (e - E["minM"]) / span))
     pt = lambda a, r: f"{c + r*math.sin(a):.1f},{c - r*math.cos(a):.1f}"
     out, start = [], 0.0
     for i, r in enumerate(rides):

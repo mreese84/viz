@@ -76,8 +76,6 @@
     <div class="group" id="themes"><span class="lbl">Theme</span></div>
     <div class="group"><span class="lbl">Units</span>
       <button data-units="imperial">mi · ft</button><button data-units="metric">km · m</button></div>
-    <div class="group"><span class="lbl">Relief</span>
-      <button data-relief="sqrt" title="Square-root scale: low terrain stays visible next to high passes">Enhanced</button><button data-relief="linear" title="Linear scale: elevation drawn to true proportion">True scale</button></div>
     <details id="custom">
       <summary>Customize colors</summary>
       <div class="pickers" id="pickers"></div>
@@ -120,9 +118,10 @@ const TOKENS = [
 ];
 const THEMES = POSTER.themes;
 const STORE = POSTER.storageKey;
-let state = { preset:POSTER.defaultTheme, overrides:{}, units:"imperial", relief:POSTER.defaultRelief || "sqrt" };
+let state = { preset:POSTER.defaultTheme, overrides:{}, units:"imperial" };
 try { const s = JSON.parse(localStorage.getItem(STORE)); if (s) state = Object.assign(state, s); } catch(e) {}
 if (!THEMES[state.preset]) { state.preset = POSTER.defaultTheme; state.overrides = {}; }   // saved theme no longer offered
+delete state.relief;   // saved by older versions, which had an Enhanced/True scale choice
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e) {} };
 const theme = () => Object.assign({}, THEMES[state.preset], state.overrides);
 
@@ -202,7 +201,7 @@ function render() {
   svg.append("rect").attr("width",W).attr("height",H).attr("fill","url(#bg)");
 
   const eTopM = state.units === "metric" ? u.eTop : u.eTop/3.28084;
-  const inner = (state.relief === "sqrt" ? d3.scaleSqrt() : d3.scaleLinear()).domain([0, eTopM - E.minM]).range([R.base, R.top]).clamp(true);
+  const inner = d3.scaleLinear().domain([0, eTopM - E.minM]).range([R.base, R.top]).clamp(true);   // true scale
   const sc = v => inner(v - E.minM);   // measured from the poster's base elevation
   elevR = sc;
 
@@ -523,7 +522,6 @@ Object.entries(THEMES).forEach(([name,t]) => {
   b.on("click", () => { state.preset = name; state.overrides = {}; save(); sync(); render(); });
 });
 d3.selectAll("[data-units]").on("click", function(){ state.units = this.dataset.units; save(); sync(); render(); });
-d3.selectAll("[data-relief]").on("click", function(){ state.relief = this.dataset.relief; save(); sync(); render(); });
 const pickers = d3.select("#pickers");
 TOKENS.forEach(([k,lab]) => {
   const l = pickers.append("label");
@@ -574,7 +572,6 @@ d3.select("#overlay").on("click", ev => { if (ev.target.id !== "ovImg") d3.selec
 function sync() {
   d3.selectAll("[data-theme]").attr("aria-pressed", function(){ return this.dataset.theme === state.preset; });
   d3.selectAll("[data-units]").attr("aria-pressed", function(){ return this.dataset.units === state.units; });
-  d3.selectAll("[data-relief]").attr("aria-pressed", function(){ return this.dataset.relief === state.relief; });
   const T = theme(); d3.selectAll("[data-token]").property("value", function(){ return T[this.dataset.token]; });
 }
 sync();

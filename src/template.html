@@ -365,11 +365,40 @@ function render() {
   RIDES.forEach(r => r.climbs.forEach(c => labels.push({ ...c, ride:r, a: ang(r.start + r.dist*c.at) })));
   labels.forEach(l => l.la = l.a);
   labels.sort((p,q) => p.a - q.a);
-  const minSep = 23 / R.lab;
+  // Names wider than the gap between the label ring and the ride band wrap onto 2–3 balanced lines; only a
+  // single word that still doesn't fit gets a smaller font. Never truncated, never squeezed (Safari ignores
+  // textLength on these multi-tspan labels).
+  const LAB_W = R.bandIn - R.lab - 8, widthCache = new Map();
+  const nameW = (s, size) => {
+    const k = size + "|" + s;
+    if (!widthCache.has(k)) { const t = root.append("text").attr("font-family",mono).attr("font-size",size).attr("font-weight",500).text(s);
+                              widthCache.set(k, t.node().getComputedTextLength()); t.remove(); }
+    return widthCache.get(k);
+  };
+  const splits = (words, n) => n === 1 ? [[words.join(" ")]]
+    : words.slice(1).flatMap((_, i) => words.length - (i+1) >= n-1
+        ? splits(words.slice(i+1), n-1).map(rest => [words.slice(0, i+1).join(" "), ...rest]) : []);
+  labels.forEach(l => {
+    let best = { lines: [l.name], w: nameW(l.name, 11) };
+    const words = l.name.trim().split(/\s+/);
+    for (let n = 2; best.w > LAB_W && n <= 3 && n <= words.length; n++)
+      for (const lines of splits(words, n)) {
+        const w = Math.max(...lines.map(s => nameW(s, 11)));
+        if (w < best.w) best = { lines, w };
+      }
+    l.lines = best.lines; l.size = best.w > LAB_W ? Math.max(7, 11 * LAB_W / best.w) : 11;
+    l.h = 23 + (l.lines.length - 1) * l.size * 1.1;   // tangential thickness of the label block (px)
+  });
+  // Collision relaxation. A label block runs clockwise from its anchor on the right half and anticlockwise on
+  // the left half (it reads outward on the right, inward on the left), so neighbours need room for the blocks
+  // that extend towards each other.
+  const right = l => l.la <= Math.PI;
   for (let it = 0; it < 60; it++) {
     for (let i = 1; i < labels.length; i++) {
-      const d = labels[i].la - labels[i-1].la;
-      if (d < minSep) { const push = (minSep - d)/2; labels[i].la += push; labels[i-1].la -= push; }
+      const p = labels[i-1], c = labels[i];
+      const need = ((right(p) ? p.h : 0) + (right(c) ? 0 : c.h) || Math.max(p.h, c.h)) / R.lab;
+      const d = c.la - p.la;
+      if (d < need) { const push = (need - d)/2; c.la += push; p.la -= push; }
     }
     labels.forEach(l => l.la = Math.max(0.07, Math.min(2*Math.PI - 0.07, l.la)));
   }
@@ -391,11 +420,12 @@ function render() {
     const [lx,ly] = pt(l.la, R.lab);
     const t = root.append("text").attr("transform",`translate(${lx},${ly}) rotate(${deg(l.la) + (flip ? 90 : -90)})`)
       .attr("text-anchor", flip ? "end" : "start").attr("font-family",mono).attr("fill",T.text);
-    t.append("tspan").attr("font-size",11).attr("font-weight",500).attr("dy","0.1em").text(l.name);
+    l.lines.forEach((s, i) => {
+      const ts = t.append("tspan").attr("font-size",l.size).attr("font-weight",500).attr("dy", i ? "1.1em" : "0.1em").text(s);
+      if (i) ts.attr("x", 0);
+    });
     const sub = l.place ? (l.sub || LOC.place) : `${fmt0(u.e(l.ele))} ${u.el}`;
     t.append("tspan").attr("x",0).attr("dy","1.05em").attr("font-size",9.5).attr("fill",T.muted).text(sub);
-    const w = t.node().getBBox().width;
-    if (w > R.bandIn - R.lab - 8) t.attr("textLength", R.bandIn - R.lab - 8).attr("lengthAdjust","spacingAndGlyphs");
   });
 
   // ---------- Lower block ----------
